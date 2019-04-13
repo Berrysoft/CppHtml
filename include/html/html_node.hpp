@@ -1,6 +1,7 @@
 #ifndef HTML_NODE_HPP
 #define HTML_NODE_HPP
 
+#include <html/array_view.hpp>
 #include <html/html_tag.hpp>
 #include <memory>
 #include <string>
@@ -24,6 +25,8 @@ namespace html
 
         constexpr html_tag& tag() noexcept { return m_tag; }
         constexpr const html_tag& tag() const noexcept { return m_tag; }
+
+        static std::unique_ptr<html_node_base> parse(impl::array_view<const char> buffer);
     };
 
     class html_node : public html_node_base
@@ -61,6 +64,8 @@ namespace html
         child_iterator insert(child_const_iterator pos, child_type&& child) { return m_nodes.insert(pos, std::move(child)); }
         child_iterator erase(child_const_iterator pos) { return m_nodes.erase(pos); }
         child_iterator erase(child_const_iterator first, child_const_iterator last) { return m_nodes.erase(first, last); }
+
+		static html_node parse(impl::array_view<const char> buffer);
     };
 
     class html_text_node : public html_node_base
@@ -73,6 +78,8 @@ namespace html
 
         constexpr std::string& text() noexcept { return m_text; }
         constexpr const std::string& text() const noexcept { return m_text; }
+
+		static html_text_node parse(impl::array_view<const char> buffer);
     };
 } // namespace html
 

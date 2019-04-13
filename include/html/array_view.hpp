@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -103,6 +104,17 @@ namespace html
     }
     template <typename T>
     impl::array_view<const T> array_view(const std::vector<T>& data)
+    {
+        return { data.data(), data.size() };
+    }
+
+    template <typename T>
+    impl::array_view<T> array_view(std::basic_string<T>& data)
+    {
+        return { data.data(), data.size() };
+    }
+    template <typename T>
+    impl::array_view<const T> array_view(const std::basic_string<T>& data)
     {
         return { data.data(), data.size() };
     }

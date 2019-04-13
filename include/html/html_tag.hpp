@@ -1,6 +1,7 @@
 #ifndef HTML_TAG_HPP
 #define HTML_TAG_HPP
 
+#include <html/array_view.hpp>
 #include <map>
 #include <string>
 
@@ -41,6 +42,8 @@ namespace html
         attr_iterator erase(attr_const_iterator pos) { return m_attrs.erase(pos); }
         attr_iterator erase(attr_const_iterator first, attr_const_iterator last) { return m_attrs.erase(first, last); }
         std::size_t erase(const std::string& key) { return m_attrs.erase(key); }
+
+        static html_tag parse(impl::array_view<const char> buffer);
     };
 } // namespace html
 
