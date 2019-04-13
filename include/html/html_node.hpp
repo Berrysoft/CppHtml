@@ -3,6 +3,8 @@
 
 #include <html_tag.hpp>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace html
 {
