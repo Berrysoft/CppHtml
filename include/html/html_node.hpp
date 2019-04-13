@@ -65,7 +65,7 @@ namespace html
         child_iterator erase(child_const_iterator pos) { return m_nodes.erase(pos); }
         child_iterator erase(child_const_iterator first, child_const_iterator last) { return m_nodes.erase(first, last); }
 
-		static html_node parse(impl::array_view<const char> buffer);
+        static std::unique_ptr<html_node> parse(impl::array_view<const char> buffer);
     };
 
     class html_text_node : public html_node_base
@@ -79,7 +79,7 @@ namespace html
         constexpr std::string& text() noexcept { return m_text; }
         constexpr const std::string& text() const noexcept { return m_text; }
 
-		static html_text_node parse(impl::array_view<const char> buffer);
+        static std::unique_ptr<html_text_node> parse(impl::array_view<const char> buffer);
     };
 } // namespace html
 
