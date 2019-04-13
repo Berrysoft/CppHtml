@@ -1,7 +1,7 @@
 #ifndef HTML_NODE_HPP
 #define HTML_NODE_HPP
 
-#include <html_tag.hpp>
+#include <html/html_tag.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -11,9 +11,7 @@ namespace html
     enum class html_node_type
     {
         node,
-        text,
-        style,
-        script
+        text
     };
 
     class html_node_base
@@ -75,18 +73,6 @@ namespace html
 
         constexpr std::string& text() noexcept { return m_text; }
         constexpr const std::string& text() const noexcept { return m_text; }
-    };
-
-    class html_style_node : public html_text_node
-    {
-    public:
-        html_node_type type() const noexcept override { return html_node_type::style; }
-    };
-
-    class html_script_node : public html_text_node
-    {
-    public:
-        html_node_type type() const noexcept override { return html_node_type::script; }
     };
 } // namespace html
 
