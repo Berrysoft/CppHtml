@@ -1,6 +1,7 @@
 #ifndef HTML_DOC_HPP
 #define HTML_DOC_HPP
 
+#include <html/array_view.hpp>
 #include <html/html_decl.hpp>
 #include <html/html_node.hpp>
 
@@ -18,6 +19,8 @@ namespace html
 
         constexpr html_node& node() noexcept { return m_node; }
         constexpr const html_node& node() const noexcept { return m_node; }
+
+        static html_doc parse(impl::array_view<const char> buffer);
     };
 } // namespace html
 
