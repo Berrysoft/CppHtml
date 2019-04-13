@@ -11,14 +11,14 @@ namespace html
     {
     private:
         html_decl m_decl;
-        std::unique_ptr<html_node> m_node;
+        std::shared_ptr<html_node> m_node;
 
     public:
         constexpr html_decl& decl() noexcept { return m_decl; }
         constexpr const html_decl& decl() const noexcept { return m_decl; }
 
-        constexpr std::unique_ptr<html_node>& node() noexcept { return m_node; }
-        constexpr const std::unique_ptr<html_node>& node() const noexcept { return m_node; }
+        constexpr std::shared_ptr<html_node>& node() noexcept { return m_node; }
+        constexpr const std::shared_ptr<html_node>& node() const noexcept { return m_node; }
 
         static html_doc parse(impl::array_view<const char> buffer);
     };
