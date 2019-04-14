@@ -4,6 +4,7 @@
 #include <html/array_view.hpp>
 #include <html/html_decl.hpp>
 #include <html/html_node.hpp>
+#include <sstream>
 
 namespace html
 {
@@ -11,16 +12,39 @@ namespace html
     {
     private:
         html_decl m_decl;
-        std::shared_ptr<html_node> m_node;
+        html_node m_node;
+
+        std::ostream& print(std::ostream& stream) const;
 
     public:
         constexpr html_decl& decl() noexcept { return m_decl; }
         constexpr const html_decl& decl() const noexcept { return m_decl; }
 
-        constexpr std::shared_ptr<html_node>& node() noexcept { return m_node; }
-        constexpr const std::shared_ptr<html_node>& node() const noexcept { return m_node; }
+        constexpr html_node& node() noexcept { return m_node; }
+        constexpr const html_node& node() const noexcept { return m_node; }
 
         static html_doc parse(impl::array_view<const char> buffer);
+
+        std::string to_string() const
+        {
+            std::ostringstream stream;
+            print(stream);
+            return stream.str();
+        }
+
+        template <typename Char>
+        friend constexpr std::basic_ostream<Char>& operator<<(std::basic_ostream<Char>& stream, const html_doc& doc)
+        {
+            if constexpr (std::is_same_v<Char, char>)
+            {
+                doc.print(stream);
+                return stream;
+            }
+            else
+            {
+                stream << doc.to_string().c_str();
+            }
+        }
     };
 } // namespace html
 

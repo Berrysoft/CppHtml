@@ -17,6 +17,13 @@ namespace html
         std::string m_name;
         attr_seq_type m_attrs;
 
+        std::ostream& print_attrs(std::ostream& stream) const;
+        std::ostream& print_open(std::ostream& stream) const;
+        std::ostream& print_close(std::ostream& stream) const;
+        std::ostream& print_single(std::ostream& stream) const;
+
+        friend class html_node;
+
     public:
         constexpr std::string& name() noexcept { return m_name; }
         constexpr const std::string& name() const noexcept { return m_name; }

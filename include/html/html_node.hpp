@@ -2,88 +2,128 @@
 #define HTML_NODE_HPP
 
 #include <html/array_view.hpp>
+#include <html/html_error.hpp>
 #include <html/html_tag.hpp>
-#include <memory>
+#include <sstream>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace html
 {
-    enum class html_node_type
+    enum class html_node_type : std::size_t
     {
         none,
         node,
         text
     };
 
-    class html_node_base
-    {
-    public:
-        virtual ~html_node_base() {}
-        virtual html_node_type type() const noexcept = 0;
+    class html_node;
 
-        static std::shared_ptr<html_node_base> parse(impl::array_view<const char> buffer);
+    struct html_node_data
+    {
+        html_tag tag;
+        std::vector<html_node> children;
     };
 
-    class html_node : public html_node_base
+    class html_node
     {
     private:
-        using child_type = std::shared_ptr<html_node_base>;
+        using child_type = html_node;
         using child_reference = child_type&;
         using child_const_reference = const child_type&;
         using child_seq_type = std::vector<child_type>;
         using child_iterator = typename child_seq_type::iterator;
         using child_const_iterator = typename child_seq_type::const_iterator;
+        using none_type = std::monostate;
+        using node_type = html_node_data;
+        using text_type = std::string;
+        using data_type = std::variant<none_type, node_type, text_type>;
 
-        html_tag m_tag;
-        child_seq_type m_nodes;
+        data_type m_data;
 
-    public:
-        ~html_node() override {}
-        html_node_type type() const noexcept override { return html_node_type::node; }
+        std::ostream& print(std::ostream& stream, int indent) const;
+        std::ostream& print(std::ostream& stream) const { return print(stream, 0); }
 
-        constexpr html_tag& tag() noexcept { return m_tag; }
-        constexpr const html_tag& tag() const noexcept { return m_tag; }
-
-        bool empty() const noexcept { return m_nodes.empty(); }
-        std::size_t size() const noexcept { return m_nodes.size(); }
-
-        child_reference front() { return m_nodes.front(); }
-        child_const_reference front() const { return m_nodes.front(); }
-        child_reference back() { return m_nodes.back(); }
-        child_const_reference back() const { return m_nodes.back(); }
-
-        child_iterator begin() noexcept { return m_nodes.begin(); }
-        child_const_iterator begin() const noexcept { return m_nodes.begin(); }
-        child_const_iterator cbegin() const noexcept { return m_nodes.cbegin(); }
-        child_iterator end() noexcept { return m_nodes.end(); }
-        child_const_iterator end() const noexcept { return m_nodes.end(); }
-        child_const_iterator cend() const noexcept { return m_nodes.cend(); }
-
-        void clear() noexcept { m_nodes.clear(); }
-        void push_back(const child_type& child) { m_nodes.push_back(child); }
-        void push_back(child_type&& child) { m_nodes.push_back(std::move(child)); }
-        child_iterator insert(child_const_iterator pos, const child_type& child) { return m_nodes.insert(pos, child); }
-        child_iterator insert(child_const_iterator pos, child_type&& child) { return m_nodes.insert(pos, std::move(child)); }
-        child_iterator erase(child_const_iterator pos) { return m_nodes.erase(pos); }
-        child_iterator erase(child_const_iterator first, child_const_iterator last) { return m_nodes.erase(first, last); }
-
-        static std::shared_ptr<html_node> parse(impl::array_view<const char> buffer);
-    };
-
-    class html_text_node : public html_node_base
-    {
-    protected:
-        std::string m_text;
+        friend class html_doc;
 
     public:
-        ~html_text_node() override {}
-        html_node_type type() const noexcept override { return html_node_type::text; }
+        constexpr html_node_type type() const noexcept { return static_cast<html_node_type>(m_data.index()); }
+        void type(html_node_type value)
+        {
+            if (value != type())
+            {
+                switch (value)
+                {
+                case html_node_type::none:
+                    m_data = none_type();
+                    break;
+                case html_node_type::node:
+                    m_data = node_type();
+                    break;
+                case html_node_type::text:
+                    m_data = text_type();
+                    break;
+                default:
+                    throw html_node_type_error();
+                }
+            }
+        }
 
-        constexpr std::string& text() noexcept { return m_text; }
-        constexpr const std::string& text() const noexcept { return m_text; }
+        constexpr html_tag& tag() noexcept { return std::get<node_type>(m_data).tag; }
+        constexpr const html_tag& tag() const noexcept { return std::get<node_type>(m_data).tag; }
 
-        static std::shared_ptr<html_text_node> parse(impl::array_view<const char> buffer);
+        constexpr text_type& text() { return std::get<text_type>(m_data); }
+        constexpr const text_type& text() const { return std::get<text_type>(m_data); }
+
+        child_reference operator[](std::size_t index) { return std::get<node_type>(m_data).children[index]; }
+        child_const_reference operator[](std::size_t index) const { return std::get<node_type>(m_data).children[index]; }
+
+        bool empty() const noexcept { return std::get<node_type>(m_data).children.empty(); }
+        std::size_t size() const noexcept { return std::get<node_type>(m_data).children.size(); }
+
+        child_reference front() { return std::get<node_type>(m_data).children.front(); }
+        child_const_reference front() const { return std::get<node_type>(m_data).children.front(); }
+        child_reference back() { return std::get<node_type>(m_data).children.back(); }
+        child_const_reference back() const { return std::get<node_type>(m_data).children.back(); }
+
+        child_iterator begin() noexcept { return std::get<node_type>(m_data).children.begin(); }
+        child_const_iterator begin() const noexcept { return std::get<node_type>(m_data).children.begin(); }
+        child_const_iterator cbegin() const noexcept { return std::get<node_type>(m_data).children.cbegin(); }
+        child_iterator end() noexcept { return std::get<node_type>(m_data).children.end(); }
+        child_const_iterator end() const noexcept { return std::get<node_type>(m_data).children.end(); }
+        child_const_iterator cend() const noexcept { return std::get<node_type>(m_data).children.cend(); }
+
+        void clear() noexcept { return std::get<node_type>(m_data).children.clear(); }
+        void push_back(const child_type& child) { std::get<node_type>(m_data).children.push_back(child); }
+        void push_back(child_type&& child) { std::get<node_type>(m_data).children.push_back(std::move(child)); }
+        child_iterator insert(child_const_iterator pos, const child_type& child) { return std::get<node_type>(m_data).children.insert(pos, child); }
+        child_iterator insert(child_const_iterator pos, child_type&& child) { return std::get<node_type>(m_data).children.insert(pos, std::move(child)); }
+        child_iterator erase(child_const_iterator pos) { return std::get<node_type>(m_data).children.erase(pos); }
+        child_iterator erase(child_const_iterator first, child_const_iterator last) { return std::get<node_type>(m_data).children.erase(first, last); }
+
+        static html_node parse(impl::array_view<const char> buffer);
+
+        std::string to_string() const
+        {
+            std::ostringstream stream;
+            print(stream);
+            return stream.str();
+        }
+
+        template <typename Char>
+        friend constexpr std::basic_ostream<Char>& operator<<(std::basic_ostream<Char>& stream, const html_node& node)
+        {
+            if constexpr (std::is_same_v<Char, char>)
+            {
+                node.print(stream);
+                return stream;
+            }
+            else
+            {
+                stream << node.to_string().c_str();
+            }
+        }
     };
 } // namespace html
 

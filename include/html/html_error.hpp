@@ -5,9 +5,16 @@
 
 namespace html
 {
-    class html_error : public std::logic_error
+    struct html_error : std::logic_error
     {
         using std::logic_error::logic_error;
+        ~html_error() override {}
+    };
+
+    struct html_node_type_error : html_error
+    {
+        html_node_type_error() : html_error("Wrong html_node_type.") {}
+        ~html_node_type_error() override {}
     };
 } // namespace html
 
