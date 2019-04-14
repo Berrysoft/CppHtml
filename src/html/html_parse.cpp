@@ -142,8 +142,8 @@ namespace html
                             auto tb = buffer + pos + 1;
                             pos = tb.find('>');
                             string_view cname(tb.data(), pos);
-                            auto it = find_if(parent.begin(), parent.end(), [cname](html_node* pn) { return pn->tag().name() == cname; });
-                            if (it != parent.end()) break;
+                            auto it = find_if(parent.rbegin(), parent.rend(), [cname](html_node* pn) { return pn->tag().name() == cname; });
+                            if (it != parent.rend()) break;
                             tb += pos + 1;
                             buffer = tb;
                         }
@@ -170,14 +170,18 @@ namespace html
                 else
                 {
                     vector<html_node> result = { node };
-                    if (node.type() == html_node_type::node)
+                    string_view tn = node.tag().name();
+                    if (tn != "p" && tn != "title" & tn != "div")
                     {
-                        for (auto& child : node)
+                        if (node.type() == html_node_type::node)
                         {
-                            result.push_back(move(child));
+                            for (auto& child : node)
+                            {
+                                result.push_back(move(child));
+                            }
                         }
+                        result[0].clear();
                     }
-                    result[0].clear();
                     return result;
                 }
             }
