@@ -2,6 +2,7 @@
 #include <cctype>
 #include <html/html_doc.hpp>
 #include <optional>
+#include <vector>
 
 using namespace std;
 
@@ -21,7 +22,7 @@ namespace html
             do
             {
                 ctn = false;
-                while (!buffer.empty() && isspace(buffer.front()))
+                while (!buffer.empty() && buffer.front() >= 1 && buffer.front() <= 255 && isspace(buffer.front()))
                 {
                     ++buffer;
                     ctn = true;
@@ -34,6 +35,7 @@ namespace html
                         ++buffer;
                         ctn = true;
                     }
+                    buffer += 3;
                 }
             } while (ctn);
         }
@@ -54,6 +56,7 @@ namespace html
                 if (pos == array_view<const char>::npos) throw html_error("The property isn't complete.");
                 string key(buffer.data(), pos);
                 buffer += pos + 1;
+                skip_space(buffer);
                 char qc = buffer.front();
                 if (qc != '\'' && qc != '\"') throw html_error("The property value isn't surrounded with quotes.");
                 ++buffer;
@@ -62,15 +65,6 @@ namespace html
                 tag[key] = string(buffer.data(), pos);
                 buffer += pos + 1;
                 skip_space(buffer);
-            }
-            if (buffer.front() == '>')
-                ++buffer;
-            else
-            {
-                ++buffer;
-                skip_space(buffer);
-                if (buffer.front() != '>') throw html_error("The tag isn't complete.");
-                ++buffer;
             }
             return tag;
         }
@@ -91,56 +85,116 @@ namespace html
                 return html_node_type::text;
         }
 
-        html_node parse_node(array_view<const char>& buffer);
-        html_node parse_text_node(array_view<const char>& buffer);
+        vector<html_node> parse_node(array_view<const char>& buffer, vector<html_node*>& parent);
+        vector<html_node> parse_text_node(array_view<const char>& buffer, vector<html_node*>& parent);
 
-        optional<html_node> parse_node_base_impl(array_view<const char>& buffer)
+        vector<html_node> parse_node_base_impl(array_view<const char>& buffer, vector<html_node*>& parent)
         {
             skip_space(buffer);
-            if (buffer.empty()) return nullopt;
+            if (buffer.empty()) return {};
             html_node_type type = parse_node_type(buffer);
             switch (type)
             {
             case html_node_type::node:
-                return parse_node(buffer);
+                return parse_node(buffer, parent);
             case html_node_type::text:
-                return parse_text_node(buffer);
+                return parse_text_node(buffer, parent);
             default:
-                return nullopt;
+                return {};
             }
         }
 
-        html_node parse_node(array_view<const char>& buffer)
+        vector<html_node> parse_node(array_view<const char>& buffer, vector<html_node*>& parent)
         {
             skip_space(buffer);
             html_node node;
+            parent.push_back(&node);
             node.type(html_node_type::node);
             node.tag(parse_tag(buffer));
-            while (true)
+            if (buffer.front() == '>')
             {
-                skip_space(buffer);
-                auto child = parse_node_base_impl(buffer);
-                if (!child) break;
-                node.push_back(move(*child));
-            }
-            buffer += 2;
-            std::size_t pos = buffer.find('>');
-            if (pos != array_view<const char>::npos && node.tag().name() == string_view(buffer.data(), pos))
-            {
-                buffer += pos + 1;
-                return node;
+                ++buffer;
+                if (node.tag().name() == "script" || node.tag().name() == "style")
+                {
+                    std::size_t pos;
+                    auto tb = buffer;
+                    while (true)
+                    {
+                        pos = tb.find('<');
+                        tb += pos;
+                        if (pos == array_view<const char>::npos || starts_with(tb, "</" + node.tag().name() + ">"))
+                            break;
+                        ++tb;
+                    }
+                    if (tb.data() - buffer.data() > 0)
+                        node.push_back({ string(buffer.data(), tb.data()) });
+                    buffer = tb;
+                }
+                else
+                {
+                    while (true)
+                    {
+                        skip_space(buffer);
+                        auto child = parse_node_base_impl(buffer, parent);
+                        if (child.empty())
+                        {
+                            std::size_t pos = buffer.find('/');
+                            auto tb = buffer + pos + 1;
+                            pos = tb.find('>');
+                            string_view cname(tb.data(), pos);
+                            auto it = find_if(parent.begin(), parent.end(), [cname](html_node* pn) { return pn->tag().name() == cname; });
+                            if (it != parent.end()) break;
+                            tb += pos + 1;
+                            buffer = tb;
+                        }
+                        else
+                        {
+                            parent.pop_back();
+                            for (auto& cc : child)
+                            {
+                                node.push_back(move(cc));
+                            }
+                        }
+                    }
+                }
+                std::size_t pos = buffer.find('/');
+                auto tb = buffer + pos + 1;
+                pos = tb.find('>');
+                string_view cname(tb.data(), pos);
+                if (pos != array_view<const char>::npos && node.tag().name() == cname)
+                {
+                    tb += pos + 1;
+                    buffer = tb;
+                    return { node };
+                }
+                else
+                {
+                    vector<html_node> result = { node };
+                    if (node.type() == html_node_type::node)
+                    {
+                        for (auto& child : node)
+                        {
+                            result.push_back(move(child));
+                        }
+                    }
+                    result[0].clear();
+                    return result;
+                }
             }
             else
             {
-                // TODO: reduce error.
-                throw html_error("Node pair doesn't match.");
+                size_t pos = buffer.find('>');
+                if (pos == array_view<const char>::npos) throw html_error("The tag isn't complete.");
+                buffer += pos + 1;
+                return { node };
             }
         }
 
-        html_node parse_text_node(array_view<const char>& buffer)
+        vector<html_node> parse_text_node(array_view<const char>& buffer, vector<html_node*>& parent)
         {
             skip_space(buffer);
             html_node node;
+            parent.push_back(&node);
             node.type(html_node_type::text);
             std::size_t pos = buffer.find('<');
             if (pos == array_view<const char>::npos)
@@ -153,14 +207,15 @@ namespace html
                 node.text(string(buffer.data(), pos));
                 buffer += pos;
             }
-            return node;
+            return { node };
         }
 
         html_node parse_node_base(array_view<const char>& buffer)
         {
-            auto result = parse_node_base_impl(buffer);
-            if (!result) throw html_error("No node found.");
-            return *result;
+            vector<html_node*> p;
+            auto result = parse_node_base_impl(buffer, p);
+            if (result.empty()) throw html_error("No node found.");
+            return result[0];
         }
 
         html_decl parse_decl(array_view<const char>& buffer)
@@ -181,7 +236,7 @@ namespace html
         {
             html_doc doc;
             doc.decl(parse_decl(buffer));
-            doc.node(parse_node(buffer));
+            doc.node(parse_node_base(buffer));
             return doc;
         }
     } // namespace impl
