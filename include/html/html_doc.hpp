@@ -17,6 +17,8 @@ namespace html
         std::ostream& print(std::ostream& stream) const;
 
     public:
+        html_doc(const html_decl& decl = {}, const html_node& node = {}) : m_decl(std::move(decl)), m_node(std::move(node)) {}
+
         PROP(decl, html_decl)
 
         PROP(node, html_node)

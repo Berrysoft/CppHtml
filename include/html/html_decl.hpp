@@ -18,6 +18,8 @@ namespace html
         friend class html_doc;
 
     public:
+        html_decl(const std::string& type = {}) : m_type(type) {}
+
         PROP(type, std::string)
 
         static html_decl parse(impl::array_view<const char> buffer);

@@ -48,6 +48,11 @@ namespace html
         friend class html_doc;
 
     public:
+        html_node() : m_data() {}
+        html_node(node_type data) : m_data(std::move(data)) {}
+        html_node(html_tag tag, std::vector<html_node> children) : m_data(html_node_data{ tag, children }) {}
+        html_node(text_type data) : m_data(std::move(data)) {}
+
         constexpr html_node_type type() const noexcept { return static_cast<html_node_type>(m_data.index()); }
         void type(html_node_type value)
         {

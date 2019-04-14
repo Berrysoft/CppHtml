@@ -26,6 +26,9 @@ namespace html
         friend class html_node;
 
     public:
+        html_tag(const std::string& name = {}) : m_name(name) {}
+        html_tag(const std::string& name, const attr_seq_type& attrs) : m_name(name), m_attrs(std::move(attrs)) {}
+
         PROP(name, std::string)
 
         std::string& operator[](const std::string& key) { return m_attrs[key]; }
