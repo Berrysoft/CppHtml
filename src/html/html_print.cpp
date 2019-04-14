@@ -6,7 +6,7 @@ namespace html
 {
     ostream& html_decl::print(ostream& stream) const
     {
-        return stream << "<!doctype " << m_type << ">\n";
+        return stream << "<!doctype " << m_type << ">";
     }
 
     ostream& html_tag::print_attrs(ostream& stream) const
@@ -50,23 +50,31 @@ namespace html
             stream << in;
             if (!data.children.empty())
             {
-                data.tag.print_open(stream) << '\n';
-                for (auto& child : data.children)
+                if (data.children.size() == 1 && data.children.front().type() == html_node_type::text)
                 {
-                    child.print(stream, indent + 1);
+                    data.tag.print_open(stream);
+                    data.children.front().print(stream, 0);
+                    data.tag.print_close(stream);
                 }
-                stream << in;
-                data.tag.print_close(stream);
+                else
+                {
+                    data.tag.print_open(stream) << '\n';
+                    for (auto& child : data.children)
+                    {
+                        child.print(stream, indent + 1) << '\n';
+                    }
+                    stream << in;
+                    data.tag.print_close(stream);
+                }
             }
             else
             {
                 data.tag.print_single(stream);
             }
-            stream << '\n';
             break;
         }
         case html_node_type::text:
-            stream << in << get<text_type>(m_data) << '\n';
+            stream << in << get<text_type>(m_data);
             break;
         }
         return stream;
@@ -74,7 +82,7 @@ namespace html
 
     ostream& html_doc::print(ostream& stream) const
     {
-        m_decl.print(stream);
+        m_decl.print(stream) << '\n';
         m_node.print(stream);
         return stream;
     }

@@ -116,12 +116,7 @@ namespace html
     }
 
     template <typename T, std::size_t Size>
-    impl::array_view<T> array_view(T data[Size])
-    {
-        return { data, Size };
-    }
-    template <typename T, std::size_t Size>
-    impl::array_view<const T> array_view(const T data[Size])
+    impl::array_view<T> array_view(T (&data)[Size])
     {
         return { data, Size };
     }

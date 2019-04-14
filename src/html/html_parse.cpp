@@ -41,8 +41,38 @@ namespace html
         html_tag parse_tag(array_view<const char>& buffer)
         {
             skip_space(buffer);
-            // TODO: tag
-            return {};
+            if (buffer.front() != '<') throw html_error("Not a tag.");
+            ++buffer;
+            size_t pos = buffer.find({ ' ', '/', '>' });
+            if (pos == array_view<const char>::npos) throw html_error("The tag isn't complete.");
+            html_tag tag(string(buffer.data(), pos));
+            buffer += pos;
+            skip_space(buffer);
+            while (buffer.front() != '/' && buffer.front() != '>')
+            {
+                pos = buffer.find('=');
+                if (pos == array_view<const char>::npos) throw html_error("The property isn't complete.");
+                string key(buffer.data(), pos);
+                buffer += pos + 1;
+                char qc = buffer.front();
+                if (qc != '\'' && qc != '\"') throw html_error("The property value isn't surrounded with quotes.");
+                ++buffer;
+                pos = buffer.find(qc);
+                if (pos == array_view<const char>::npos) throw html_error("The property value isn't surrounded with quotes.");
+                tag[key] = string(buffer.data(), pos);
+                buffer += pos + 1;
+                skip_space(buffer);
+            }
+            if (buffer.front() == '>')
+                ++buffer;
+            else
+            {
+                ++buffer;
+                skip_space(buffer);
+                if (buffer.front() != '>') throw html_error("The tag isn't complete.");
+                ++buffer;
+            }
+            return tag;
         }
 
         html_node_type parse_node_type(array_view<const char>& buffer)
@@ -97,6 +127,7 @@ namespace html
             std::size_t pos = buffer.find('>');
             if (pos != array_view<const char>::npos && node.tag().name() == string_view(buffer.data(), pos))
             {
+                buffer += pos + 1;
                 return node;
             }
             else
@@ -119,7 +150,7 @@ namespace html
             }
             else
             {
-                node.text(string(buffer.begin(), buffer.begin() + pos));
+                node.text(string(buffer.data(), pos));
                 buffer += pos;
             }
             return node;
@@ -141,7 +172,7 @@ namespace html
             html_decl decl;
             size_t pos = buffer.find('>');
             if (pos == array_view<const char>::npos) throw html_error("Declaration not complete.");
-            decl.type(string(buffer.begin(), buffer.begin() + pos));
+            decl.type(string(buffer.data(), pos));
             buffer += pos + 1;
             return decl;
         }

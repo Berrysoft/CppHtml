@@ -1,8 +1,7 @@
 # CppHtml
-[WIP]A modern C++ HTML parser.
+A modern C++ HTML parser. Still has lots of bugs...
 
 ## Define a HTML document
-
 ``` cpp
 #include <html/html_doc.hpp>
 #include <iostream>
@@ -19,10 +18,12 @@ int main()
               { { { "title" },
                   { { "Title" } } } } },
             { { "body" },
-              { { { "p" },
+              { { { "h1", { { "align", "center" } } },
+                  { { "Hello" } } },
+                { { "p" },
                   { { "Hello world!" } } } } } } }
     };
-    cout << doc;
+    cout << doc << endl;
 }
 ```
 Output:
@@ -30,17 +31,27 @@ Output:
 <!doctype html>
 <html>
   <head>
-    <title>
-      Title
-    </title>
+    <title>Title</title>
   </head>
   <body>
-    <p>
-      Hello world!
-    </p>
+    <h1 align='center'>Hello</h1>
+    <p>Hello world!</p>
   </body>
 </html>
 ```
 
 ## Parse a HTML document
-Implementing...
+``` cpp
+#include <html/html_doc.hpp>
+#include <iostream>
+
+using namespace std;
+using namespace html;
+
+int main()
+{
+    html_doc doc = html_doc::parse(array_view("<!doctype html><html><head><title>Title</title></head><body><h1 align=\"center\">Hello</h1><p>Hello world!</p></body></html>"));
+    cout << doc << endl;
+}
+```
+The output is the same as above.
