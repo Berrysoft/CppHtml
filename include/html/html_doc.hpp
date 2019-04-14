@@ -17,11 +17,9 @@ namespace html
         std::ostream& print(std::ostream& stream) const;
 
     public:
-        constexpr html_decl& decl() noexcept { return m_decl; }
-        constexpr const html_decl& decl() const noexcept { return m_decl; }
+        PROP(decl, html_decl)
 
-        constexpr html_node& node() noexcept { return m_node; }
-        constexpr const html_node& node() const noexcept { return m_node; }
+        PROP(node, html_node)
 
         static html_doc parse(impl::array_view<const char> buffer);
 

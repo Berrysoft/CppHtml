@@ -2,6 +2,7 @@
 #define HTML_DECL_HPP
 
 #include <html/array_view.hpp>
+#include <html/html_utility.hpp>
 #include <sstream>
 #include <string>
 
@@ -17,8 +18,7 @@ namespace html
         friend class html_doc;
 
     public:
-        constexpr std::string& type() noexcept { return m_type; }
-        constexpr const std::string& type() const noexcept { return m_type; }
+        PROP(type, std::string)
 
         static html_decl parse(impl::array_view<const char> buffer);
 

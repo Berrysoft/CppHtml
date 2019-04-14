@@ -2,6 +2,7 @@
 #define HTML_TAG_HPP
 
 #include <html/array_view.hpp>
+#include <html/html_utility.hpp>
 #include <map>
 #include <string>
 
@@ -25,8 +26,7 @@ namespace html
         friend class html_node;
 
     public:
-        constexpr std::string& name() noexcept { return m_name; }
-        constexpr const std::string& name() const noexcept { return m_name; }
+        PROP(name, std::string)
 
         std::string& operator[](const std::string& key) { return m_attrs[key]; }
         std::string& operator[](std::string&& key) { return m_attrs[std::move(key)]; }

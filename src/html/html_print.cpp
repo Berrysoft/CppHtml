@@ -6,7 +6,7 @@ namespace html
 {
     ostream& html_decl::print(ostream& stream) const
     {
-        return stream << "<!DOCTYPE html>\n";
+        return stream << "<!doctype " << m_type << ">\n";
     }
 
     ostream& html_tag::print_attrs(ostream& stream) const
@@ -39,7 +39,7 @@ namespace html
         return stream;
     }
 
-    ostream& html_node::print(ostream& stream, int indent) const
+    ostream& html_node::print(ostream& stream, size_t indent) const
     {
         string in(indent * 2, ' ');
         switch (type())

@@ -42,7 +42,7 @@ namespace html
 
         data_type m_data;
 
-        std::ostream& print(std::ostream& stream, int indent) const;
+        std::ostream& print(std::ostream& stream, std::size_t indent) const;
         std::ostream& print(std::ostream& stream) const { return print(stream, 0); }
 
         friend class html_doc;
@@ -70,11 +70,9 @@ namespace html
             }
         }
 
-        constexpr html_tag& tag() noexcept { return std::get<node_type>(m_data).tag; }
-        constexpr const html_tag& tag() const noexcept { return std::get<node_type>(m_data).tag; }
+        PROP_GETSET(tag, html_tag, std::get<node_type>(m_data).tag, std::get<node_type>(m_data).tag)
 
-        constexpr text_type& text() { return std::get<text_type>(m_data); }
-        constexpr const text_type& text() const { return std::get<text_type>(m_data); }
+        PROP_GETSET(text, text_type, std::get<text_type>(m_data), m_data)
 
         child_reference operator[](std::size_t index) { return std::get<node_type>(m_data).children[index]; }
         child_const_reference operator[](std::size_t index) const { return std::get<node_type>(m_data).children[index]; }

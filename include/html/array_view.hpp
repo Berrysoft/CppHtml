@@ -27,7 +27,7 @@ namespace html
             using iterator = pointer;
             using const_iterator = const_pointer;
 
-			static constexpr std::size_t npos = static_cast<std::size_t>(-1);
+            static constexpr std::size_t npos = static_cast<std::size_t>(-1);
 
             constexpr array_view() noexcept : array_view(nullptr, 0) {}
             constexpr array_view(T* data, std::size_t size) noexcept : m_data(data), m_size(size) {}
@@ -60,6 +60,17 @@ namespace html
                 }
                 return npos;
             }
+            constexpr std::size_t find(std::initializer_list<T> values) const noexcept
+            {
+                for (std::size_t i = 0; i < m_size; i++)
+                {
+                    for (const T value : values)
+                    {
+                        if (m_data[i] == value) return i;
+                    }
+                }
+                return npos;
+            }
 
             constexpr array_view& operator+=(std::size_t n)
             {
@@ -67,6 +78,21 @@ namespace html
                 m_size -= n;
                 m_data += n;
                 return *this;
+            }
+            constexpr array_view& operator++()
+            {
+                if (m_size > 0)
+                {
+                    m_data++;
+                    m_size--;
+                }
+                return *this;
+            }
+            constexpr array_view operator++(int)
+            {
+                array_view result = *this;
+                operator++();
+                return result;
             }
 
             friend constexpr array_view operator+(array_view b, std::size_t n)
