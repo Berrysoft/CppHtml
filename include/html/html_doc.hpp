@@ -45,6 +45,9 @@ namespace html
                 stream << doc.to_string().c_str();
             }
         }
+
+        friend bool operator==(const html_doc& d1, const html_doc& d2);
+        friend inline bool operator!=(const html_doc& d1, const html_doc& d2) { return !(d1 == d2); }
     };
 } // namespace html
 

@@ -25,6 +25,9 @@ namespace html
         std::vector<html_node> children;
     };
 
+    bool operator==(const html_node_data& d1, const html_node_data& d2);
+    inline bool operator!=(const html_node_data& d1, const html_node_data& d2) { return !(d1 == d2); }
+
     class html_node
     {
     private:
@@ -125,6 +128,9 @@ namespace html
                 stream << node.to_string().c_str();
             }
         }
+
+        friend bool operator==(const html_node& n1, const html_node& n2);
+        friend inline bool operator!=(const html_node& n1, const html_node& n2) { return !(n1 == n2); }
     };
 } // namespace html
 

@@ -44,8 +44,10 @@ namespace html
                 stream << decl.to_string().c_str();
             }
         }
-    };
 
+        friend bool operator==(const html_decl& d1, const html_decl& d2);
+        friend inline bool operator!=(const html_decl& d1, const html_decl& d2) { return !(d1 == d2); }
+    };
 } // namespace html
 
 #endif //!HTML_DECL_HPP

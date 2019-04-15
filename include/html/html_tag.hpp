@@ -54,6 +54,9 @@ namespace html
         std::size_t erase(const std::string& key) { return m_attrs.erase(key); }
 
         static html_tag parse(impl::array_view<const char> buffer);
+
+        friend bool operator==(const html_tag& t1, const html_tag& t2);
+        friend inline bool operator!=(const html_tag& t1, const html_tag& t2) { return !(t1 == t2); }
     };
 } // namespace html
 
