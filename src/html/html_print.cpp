@@ -1,9 +1,32 @@
 #include <html/html_doc.hpp>
+#include <map>
+#include <string_view>
 
 using namespace std;
 
 namespace html
 {
+    const map<char, string> ascii_ent = { { '\"', "quot" }, { '\'', "apos" }, { '&', "amp" }, { '<', "lt" }, { '>', "gt" } };
+    constexpr string_view ascii_ent_fs = "\"\'&<>";
+    const map<char, string> ascii_ent_nq = { { '&', "amp" }, { '<', "lt" }, { '>', "gt" } };
+    constexpr string_view ascii_ent_nq_fs = "&<>";
+
+    ostream& print_ent(ostream& stream, const string& str, bool noquotes)
+    {
+        const map<char, string>& m = noquotes ? ascii_ent_nq : ascii_ent;
+        string_view fs = noquotes ? ascii_ent_nq_fs : ascii_ent_fs;
+        size_t off = 0;
+        size_t pos;
+        while ((pos = str.find_first_of(fs, off)) != string::npos)
+        {
+            stream.write(str.data() + off, pos - off);
+            stream << '&' << m.at(str[pos]) << ';';
+            off = pos + 1;
+        }
+        stream.write(str.data() + off, str.size() - off);
+        return stream;
+    }
+
     ostream& html_decl::print(ostream& stream) const
     {
         return stream << "<!doctype " << m_type << ">";
@@ -13,7 +36,28 @@ namespace html
     {
         for (auto pair : m_attrs)
         {
-            stream << ' ' << pair.first << "=\'" << pair.second << '\'';
+            stream << ' ' << pair.first;
+            if (pair.first != pair.second)
+            {
+                if (pair.second.find('\"') != string::npos)
+                {
+                    if (pair.second.find('\'') != string::npos)
+                    {
+                        stream << "=\"";
+                        print_ent(stream, pair.second, false) << "\"";
+                    }
+                    else
+                    {
+                        stream << "=\'";
+                        print_ent(stream, pair.second, true) << "\'";
+                    }
+                }
+                else
+                {
+                    stream << "=\"";
+                    print_ent(stream, pair.second, true) << "\"";
+                }
+            }
         }
         return stream;
     }
@@ -74,7 +118,8 @@ namespace html
             break;
         }
         case html_node_type::text:
-            stream << in << get<text_type>(m_data);
+            stream << in;
+            print_ent(stream, get<text_type>(m_data), false);
             break;
         }
         return stream;

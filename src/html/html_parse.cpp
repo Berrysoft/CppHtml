@@ -63,7 +63,7 @@ namespace html
                 {
                     pos = buffer.find({ ' ', '/', '>' });
                     string key(buffer.data(), pos);
-                    tag[key] = "true";
+                    tag[key] = key;
                     buffer += pos;
                     skip_space(buffer);
                     continue;
@@ -156,15 +156,6 @@ namespace html
                     auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return pn->tag().name() == cname; });
                     if (it == p.rend())
                     {
-                        auto nit = find_if(np.crbegin(), np.crend(), [cname](const html_node* pn) { return pn->tag().name() == cname; });
-                        if (nit != np.crend())
-                        {
-                            np.erase(--nit.base());
-                        }
-                        else
-                        {
-                            current->push_back({ { static_cast<string>(cname) }, {} });
-                        }
                         buffer = tb;
                     }
                     else
@@ -194,7 +185,6 @@ namespace html
                                     parent->push_back(move(node));
                                 }
                             }
-                            np.push_back(p.back());
                         }
                         p.pop_back();
                     }
