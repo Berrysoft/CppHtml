@@ -43,27 +43,53 @@ namespace html
         html_tag parse_tag(array_view<const char>& buffer)
         {
             skip_space(buffer);
-            if (buffer.front() != '<') throw html_error("Not a tag.");
+            if (buffer.front() != '<') return {};
             ++buffer;
             size_t pos = buffer.find({ ' ', '/', '>' });
-            if (pos == array_view<const char>::npos) throw html_error("The tag isn't complete.");
+            if (pos == array_view<const char>::npos)
+            {
+                html_tag tag(string(buffer.begin(), buffer.end()));
+                buffer = {};
+                return tag;
+            }
             html_tag tag(string(buffer.data(), pos));
             buffer += pos;
             skip_space(buffer);
-            while (buffer.front() != '/' && buffer.front() != '>')
+            while (!buffer.empty() && buffer.front() != '/' && buffer.front() != '>')
             {
                 pos = buffer.find('=');
-                if (pos == array_view<const char>::npos) throw html_error("The property isn't complete.");
+                if (pos == array_view<const char>::npos)
+                {
+                    pos = buffer.find({ ' ', '/', '>' });
+                    string key(buffer.data(), pos);
+                    tag[key] = "true";
+                    buffer += pos;
+                    skip_space(buffer);
+                    continue;
+                }
                 string key(buffer.data(), pos);
                 buffer += pos + 1;
                 skip_space(buffer);
                 char qc = buffer.front();
-                if (qc != '\'' && qc != '\"') throw html_error("The property value isn't surrounded with quotes.");
-                ++buffer;
-                pos = buffer.find(qc);
-                if (pos == array_view<const char>::npos) throw html_error("The property value isn't surrounded with quotes.");
-                tag[key] = string(buffer.data(), pos);
-                buffer += pos + 1;
+                if (qc != '\'' && qc != '\"')
+                {
+                    pos = buffer.find({ ' ', '/', '>' });
+                }
+                else
+                {
+                    ++buffer;
+                    pos = buffer.find(qc);
+                }
+                if (pos == array_view<const char>::npos)
+                {
+                    tag[key] = string(buffer.begin(), buffer.end());
+                    buffer = {};
+                }
+                else
+                {
+                    tag[key] = string(buffer.data(), pos);
+                    buffer += pos + 1;
+                }
                 skip_space(buffer);
             }
             return tag;

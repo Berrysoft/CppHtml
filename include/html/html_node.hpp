@@ -2,7 +2,6 @@
 #define HTML_NODE_HPP
 
 #include <html/array_view.hpp>
-#include <html/html_error.hpp>
 #include <html/html_tag.hpp>
 #include <sstream>
 #include <string>
@@ -60,9 +59,6 @@ namespace html
             {
                 switch (value)
                 {
-                case html_node_type::none:
-                    m_data = none_type();
-                    break;
                 case html_node_type::node:
                     m_data = node_type();
                     break;
@@ -70,7 +66,8 @@ namespace html
                     m_data = text_type();
                     break;
                 default:
-                    throw html_node_type_error();
+                    m_data = none_type();
+                    break;
                 }
             }
         }
