@@ -136,6 +136,7 @@ namespace html
             html_node root;
             root.type(html_node_type::node);
             vector<html_node*> p = { &root };
+            vector<html_node*> np;
             while (true)
             {
                 if (p.empty()) break;
@@ -155,7 +156,15 @@ namespace html
                     auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return pn->tag().name() == cname; });
                     if (it == p.rend())
                     {
-                        current->push_back({ { static_cast<string>(cname) }, {} });
+                        auto nit = find_if(np.crbegin(), np.crend(), [cname](const html_node* pn) { return pn->tag().name() == cname; });
+                        if (nit != np.crend())
+                        {
+                            np.erase(--nit.base());
+                        }
+                        else
+                        {
+                            current->push_back({ { static_cast<string>(cname) }, {} });
+                        }
                         buffer = tb;
                     }
                     else
@@ -185,6 +194,7 @@ namespace html
                                     parent->push_back(move(node));
                                 }
                             }
+                            np.push_back(p.back());
                         }
                         p.pop_back();
                     }

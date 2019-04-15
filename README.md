@@ -46,7 +46,7 @@ The output is the same as above.
 ``` cpp
 using namespace std;
 using namespace html;
-html_doc doc = html_doc::parse("<!doctype html><html><head><title>Title</head><body><h1 align=\"center\">Hello</h1><p>Hello <p>world!<br/></body></html>");
+html_doc doc = html_doc::parse("<!doctype html><html><head><title>Title<!--</title>--></head></title><body><h1 align=\"center\">Hello</h1><p>Hello <p>world!<br/></body></html>");
 for (auto& p : doc.node()["body"].back()["p"])
 {
     cout << p.front().text();
