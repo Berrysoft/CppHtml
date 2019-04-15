@@ -2,10 +2,10 @@
 #define HTML_TAG_HPP
 
 #include <algorithm>
-#include <html/array_view.hpp>
 #include <html/html_utility.hpp>
 #include <map>
 #include <string>
+#include <string_view>
 
 namespace html
 {
@@ -63,7 +63,7 @@ namespace html
         attr_iterator erase(attr_const_iterator first, attr_const_iterator last) { return m_attrs.erase(first, last); }
         std::size_t erase(const std::string& key) { return m_attrs.erase(key); }
 
-        static html_tag parse(impl::array_view<const char> buffer);
+        static html_tag parse(std::string_view buffer);
 
         friend inline bool operator==(const html_tag& t1, const html_tag& t2) { return t1.m_name == t2.m_name && std::equal(t1.m_attrs.begin(), t1.m_attrs.end(), t2.m_attrs.begin(), t2.m_attrs.end()); }
         friend inline bool operator!=(const html_tag& t1, const html_tag& t2) { return !(t1 == t2); }

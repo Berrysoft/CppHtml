@@ -1,11 +1,11 @@
 #ifndef HTML_NODE_HPP
 #define HTML_NODE_HPP
 
-#include <html/array_view.hpp>
 #include <html/html_tag.hpp>
 #include <iterator>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -124,7 +124,7 @@ namespace html
         html_node_elements_view operator[](const std::string& name);
         html_node_const_elements_view operator[](const std::string& name) const;
 
-        static html_node parse(impl::array_view<const char> buffer);
+        static html_node parse(std::string_view buffer);
 
         std::string to_string() const
         {

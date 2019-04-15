@@ -1,10 +1,10 @@
 #ifndef HTML_DECL_HPP
 #define HTML_DECL_HPP
 
-#include <html/array_view.hpp>
 #include <html/html_utility.hpp>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 namespace html
 {
@@ -22,7 +22,7 @@ namespace html
 
         PROP(type, std::string)
 
-        static html_decl parse(impl::array_view<const char> buffer);
+        static html_decl parse(std::string_view buffer);
 
         std::string to_string() const
         {

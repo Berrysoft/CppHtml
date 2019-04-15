@@ -1,10 +1,10 @@
 #ifndef HTML_DOC_HPP
 #define HTML_DOC_HPP
 
-#include <html/array_view.hpp>
 #include <html/html_decl.hpp>
 #include <html/html_node.hpp>
 #include <sstream>
+#include <string_view>
 
 namespace html
 {
@@ -23,7 +23,7 @@ namespace html
 
         PROP(node, html_node)
 
-        static html_doc parse(impl::array_view<const char> buffer);
+        static html_doc parse(std::string_view buffer);
 
         std::string to_string() const
         {

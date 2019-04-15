@@ -1,3 +1,4 @@
+#include "array_view.hpp"
 #include <algorithm>
 #include <cctype>
 #include <html/html_doc.hpp>
@@ -259,23 +260,27 @@ namespace html
         }
     } // namespace impl
 
-    html_tag html_tag::parse(impl::array_view<const char> buffer)
+    html_tag html_tag::parse(string_view buffer)
     {
-        return impl::parse_tag(buffer);
+        array_view<const char> arr(buffer.data(), buffer.size());
+        return impl::parse_tag(arr);
     }
 
-    html_node html_node::parse(impl::array_view<const char> buffer)
+    html_node html_node::parse(string_view buffer)
     {
-        return impl::parse_node(buffer);
+        array_view<const char> arr(buffer.data(), buffer.size());
+        return impl::parse_node(arr);
     }
 
-    html_decl html_decl::parse(impl::array_view<const char> buffer)
+    html_decl html_decl::parse(string_view buffer)
     {
-        return impl::parse_decl(buffer);
+        array_view<const char> arr(buffer.data(), buffer.size());
+        return impl::parse_decl(arr);
     }
 
-    html_doc html_doc::parse(impl::array_view<const char> buffer)
+    html_doc html_doc::parse(string_view buffer)
     {
-        return impl::parse_doc(buffer);
+        array_view<const char> arr(buffer.data(), buffer.size());
+        return impl::parse_doc(arr);
     }
 } // namespace html
