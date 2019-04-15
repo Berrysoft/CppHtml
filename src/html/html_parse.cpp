@@ -85,120 +85,10 @@ namespace html
                 return html_node_type::text;
         }
 
-        vector<html_node> parse_node(array_view<const char>& buffer, vector<html_node*>& parent);
-        vector<html_node> parse_text_node(array_view<const char>& buffer, vector<html_node*>& parent);
-
-        vector<html_node> parse_node_base_impl(array_view<const char>& buffer, vector<html_node*>& parent)
-        {
-            skip_space(buffer);
-            if (buffer.empty()) return {};
-            html_node_type type = parse_node_type(buffer);
-            switch (type)
-            {
-            case html_node_type::node:
-                return parse_node(buffer, parent);
-            case html_node_type::text:
-                return parse_text_node(buffer, parent);
-            default:
-                return {};
-            }
-        }
-
-        vector<html_node> parse_node(array_view<const char>& buffer, vector<html_node*>& parent)
+        html_node parse_text_node(array_view<const char>& buffer)
         {
             skip_space(buffer);
             html_node node;
-            parent.push_back(&node);
-            node.type(html_node_type::node);
-            node.tag(parse_tag(buffer));
-            if (buffer.front() == '>')
-            {
-                ++buffer;
-                if (node.tag().name() == "script" || node.tag().name() == "style")
-                {
-                    std::size_t pos;
-                    auto tb = buffer;
-                    while (true)
-                    {
-                        pos = tb.find('<');
-                        tb += pos;
-                        if (pos == array_view<const char>::npos || starts_with(tb, "</" + node.tag().name() + ">"))
-                            break;
-                        ++tb;
-                    }
-                    if (tb.data() - buffer.data() > 0)
-                        node.push_back({ string(buffer.data(), tb.data()) });
-                    buffer = tb;
-                }
-                else
-                {
-                    while (true)
-                    {
-                        skip_space(buffer);
-                        auto child = parse_node_base_impl(buffer, parent);
-                        if (child.empty())
-                        {
-                            std::size_t pos = buffer.find('/');
-                            auto tb = buffer + pos + 1;
-                            pos = tb.find('>');
-                            string_view cname(tb.data(), pos);
-                            auto it = find_if(parent.rbegin(), parent.rend(), [cname](html_node* pn) { return pn->tag().name() == cname; });
-                            if (it != parent.rend()) break;
-                            tb += pos + 1;
-                            buffer = tb;
-                        }
-                        else
-                        {
-                            parent.pop_back();
-                            for (auto& cc : child)
-                            {
-                                node.push_back(move(cc));
-                            }
-                        }
-                    }
-                }
-                std::size_t pos = buffer.find('/');
-                auto tb = buffer + pos + 1;
-                pos = tb.find('>');
-                string_view cname(tb.data(), pos);
-                if (pos != array_view<const char>::npos && node.tag().name() == cname)
-                {
-                    tb += pos + 1;
-                    buffer = tb;
-                    return { node };
-                }
-                else
-                {
-                    vector<html_node> result = { node };
-                    string_view tn = node.tag().name();
-                    if (tn != "p" && tn != "title" & tn != "div")
-                    {
-                        if (node.type() == html_node_type::node)
-                        {
-                            for (auto& child : node)
-                            {
-                                result.push_back(move(child));
-                            }
-                        }
-                        result[0].clear();
-                    }
-                    return result;
-                }
-            }
-            else
-            {
-                size_t pos = buffer.find('>');
-                if (pos == array_view<const char>::npos) throw html_error("The tag isn't complete.");
-                buffer += pos + 1;
-                return { node };
-            }
-        }
-
-        vector<html_node> parse_text_node(array_view<const char>& buffer, vector<html_node*>& parent)
-        {
-            skip_space(buffer);
-            html_node node;
-            parent.push_back(&node);
             node.type(html_node_type::text);
             std::size_t pos = buffer.find('<');
             if (pos == array_view<const char>::npos)
@@ -211,28 +101,117 @@ namespace html
                 node.text(string(buffer.data(), pos));
                 buffer += pos;
             }
-            return { node };
+            return node;
         }
 
         html_node parse_node_base(array_view<const char>& buffer)
         {
-            vector<html_node*> p;
-            auto result = parse_node_base_impl(buffer, p);
-            if (result.empty()) throw html_error("No node found.");
-            return result[0];
+            html_node root;
+            root.type(html_node_type::node);
+            vector<html_node*> p = { &root };
+            while (true)
+            {
+                if (p.empty()) break;
+                html_node* current = p.back();
+                html_node_type type = parse_node_type(buffer);
+                if (buffer.empty()) break;
+                switch (type)
+                {
+                case html_node_type::none:
+                {
+                    size_t pos = buffer.find('/');
+                    auto tb = buffer + pos + 1;
+                    pos = tb.find({ ' ', '>' });
+                    string_view cname(tb.data(), pos);
+                    pos = tb.find('>');
+                    tb += pos + 1;
+                    auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return pn->tag().name() == cname; });
+                    if (it == p.rend())
+                        buffer = tb;
+                    else
+                    {
+                        if (it == p.rbegin())
+                        {
+                            buffer = tb;
+                        }
+                        else
+                        {
+                            if (p.size() > 1 && (current->size() > 1 || (!current->empty() && current->front().type() != html_node_type::text)))
+                            {
+                                html_node* parent = p[p.size() - 2];
+                                vector<html_node> children(current->begin(), current->end());
+                                current->clear();
+                                for (html_node& node : children)
+                                {
+                                    parent->push_back(move(node));
+                                }
+                            }
+                        }
+                        p.pop_back();
+                    }
+                    break;
+                }
+                case html_node_type::node:
+                {
+                    html_node newn(parse_tag(buffer), {});
+                    if (buffer.front() == '>')
+                    {
+                        ++buffer;
+                        if (newn.tag().name() == "script" || newn.tag().name() == "style")
+                        {
+                            std::size_t pos;
+                            auto tb = buffer;
+                            while (true)
+                            {
+                                pos = tb.find('<');
+                                tb += pos;
+                                if (pos == array_view<const char>::npos || starts_with(tb, "</" + newn.tag().name() + ">"))
+                                    break;
+                                ++tb;
+                            }
+                            if (tb.data() - buffer.data() > 0)
+                                newn.push_back({ string(buffer.data(), tb.data()) });
+                            buffer = tb;
+                        }
+                        current->push_back(move(newn));
+                        p.push_back(&current->back());
+                    }
+                    else
+                    {
+                        size_t pos = buffer.find('>');
+                        buffer += pos + 1;
+                        current->push_back(move(newn));
+                    }
+                    break;
+                }
+                case html_node_type::text:
+                {
+                    current->push_back(parse_text_node(buffer));
+                    break;
+                }
+                }
+            }
+            return root.front();
         }
 
         html_decl parse_decl(array_view<const char>& buffer)
         {
             skip_space(buffer);
-            if (!starts_with(buffer, "<!doctype")) throw html_error("No declaration found.");
+            if (!starts_with(buffer, "<!doctype")) return {};
             buffer += 9;
             skip_space(buffer);
             html_decl decl;
             size_t pos = buffer.find('>');
-            if (pos == array_view<const char>::npos) throw html_error("Declaration not complete.");
-            decl.type(string(buffer.data(), pos));
-            buffer += pos + 1;
+            if (pos == array_view<const char>::npos)
+            {
+                decl.type(string(buffer.begin(), buffer.end()));
+                buffer = {};
+            }
+            else
+            {
+                decl.type(string(buffer.data(), pos));
+                buffer += pos + 1;
+            }
             return decl;
         }
 

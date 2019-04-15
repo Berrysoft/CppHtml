@@ -100,6 +100,7 @@ namespace html
         void clear() noexcept { return std::get<node_type>(m_data).children.clear(); }
         void push_back(const child_type& child) { std::get<node_type>(m_data).children.push_back(child); }
         void push_back(child_type&& child) { std::get<node_type>(m_data).children.push_back(std::move(child)); }
+        void pop_back() { std::get<node_type>(m_data).children.pop_back(); }
         child_iterator insert(child_const_iterator pos, const child_type& child) { return std::get<node_type>(m_data).children.insert(pos, child); }
         child_iterator insert(child_const_iterator pos, child_type&& child) { return std::get<node_type>(m_data).children.insert(pos, std::move(child)); }
         child_iterator erase(child_const_iterator pos) { return std::get<node_type>(m_data).children.erase(pos); }
