@@ -1,4 +1,4 @@
-#include "array_view.hpp"
+#include "char_array_view.hpp"
 #include <algorithm>
 #include <cctype>
 #include <html/html_doc.hpp>
@@ -11,13 +11,13 @@ namespace html
 {
     namespace impl
     {
-        bool starts_with(const array_view<const char>& buffer, string_view str)
+        bool starts_with(const char_array_view& buffer, string_view str)
         {
             if (buffer.size() < str.size()) return false;
             return equal(buffer.begin(), buffer.begin() + str.size(), str.begin(), str.end(), [](char a, char b) { return tolower(a) == tolower(b); });
         }
 
-        void skip_space(array_view<const char>& buffer)
+        void skip_space(char_array_view& buffer)
         {
             bool ctn;
             do
@@ -41,13 +41,13 @@ namespace html
             } while (ctn);
         }
 
-        html_tag parse_tag(array_view<const char>& buffer)
+        html_tag parse_tag(char_array_view& buffer)
         {
             skip_space(buffer);
             if (buffer.front() != '<') return {};
             ++buffer;
             size_t pos = buffer.find({ ' ', '/', '>' });
-            if (pos == array_view<const char>::npos)
+            if (pos == char_array_view::npos)
             {
                 html_tag tag(string(buffer.begin(), buffer.end()));
                 buffer = {};
@@ -59,7 +59,7 @@ namespace html
             while (!buffer.empty() && buffer.front() != '/' && buffer.front() != '>')
             {
                 pos = buffer.find('=');
-                if (pos == array_view<const char>::npos)
+                if (pos == char_array_view::npos)
                 {
                     pos = buffer.find({ ' ', '/', '>' });
                     string key(buffer.data(), pos);
@@ -81,7 +81,7 @@ namespace html
                     ++buffer;
                     pos = buffer.find(qc);
                 }
-                if (pos == array_view<const char>::npos)
+                if (pos == char_array_view::npos)
                 {
                     tag[key] = string(buffer.begin(), buffer.end());
                     buffer = {};
@@ -96,7 +96,7 @@ namespace html
             return tag;
         }
 
-        html_node_type parse_node_type(array_view<const char>& buffer)
+        html_node_type parse_node_type(char_array_view& buffer)
         {
             skip_space(buffer);
             if (buffer.empty())
@@ -112,13 +112,13 @@ namespace html
                 return html_node_type::text;
         }
 
-        html_node parse_text_node(array_view<const char>& buffer)
+        html_node parse_text_node(char_array_view& buffer)
         {
             skip_space(buffer);
             html_node node;
             node.type(html_node_type::text);
             std::size_t pos = buffer.find('<');
-            if (pos == array_view<const char>::npos)
+            if (pos == char_array_view::npos)
             {
                 node.text(string(buffer.begin(), buffer.end()));
                 buffer += pos;
@@ -131,7 +131,7 @@ namespace html
             return node;
         }
 
-        html_node parse_node(array_view<const char>& buffer)
+        html_node parse_node(char_array_view& buffer)
         {
             html_node root;
             root.type(html_node_type::node);
@@ -201,7 +201,7 @@ namespace html
                             {
                                 pos = tb.find('<');
                                 tb += pos;
-                                if (pos == array_view<const char>::npos || starts_with(tb, "</" + newn.tag().name() + ">"))
+                                if (pos == char_array_view::npos || starts_with(tb, "</" + newn.tag().name() + ">"))
                                     break;
                                 ++tb;
                             }
@@ -230,7 +230,7 @@ namespace html
             return root.front();
         }
 
-        html_decl parse_decl(array_view<const char>& buffer)
+        html_decl parse_decl(char_array_view& buffer)
         {
             skip_space(buffer);
             if (!starts_with(buffer, "<!doctype")) return {};
@@ -238,7 +238,7 @@ namespace html
             skip_space(buffer);
             html_decl decl;
             size_t pos = buffer.find('>');
-            if (pos == array_view<const char>::npos)
+            if (pos == char_array_view::npos)
             {
                 decl.type(string(buffer.begin(), buffer.end()));
                 buffer = {};
@@ -251,7 +251,7 @@ namespace html
             return decl;
         }
 
-        html_doc parse_doc(array_view<const char>& buffer)
+        html_doc parse_doc(char_array_view& buffer)
         {
             html_doc doc;
             doc.decl(parse_decl(buffer));
@@ -262,25 +262,25 @@ namespace html
 
     html_tag html_tag::parse(string_view buffer)
     {
-        array_view<const char> arr(buffer.data(), buffer.size());
+        char_array_view arr(buffer.data(), buffer.size());
         return impl::parse_tag(arr);
     }
 
     html_node html_node::parse(string_view buffer)
     {
-        array_view<const char> arr(buffer.data(), buffer.size());
+        char_array_view arr(buffer.data(), buffer.size());
         return impl::parse_node(arr);
     }
 
     html_decl html_decl::parse(string_view buffer)
     {
-        array_view<const char> arr(buffer.data(), buffer.size());
+        char_array_view arr(buffer.data(), buffer.size());
         return impl::parse_decl(arr);
     }
 
     html_doc html_doc::parse(string_view buffer)
     {
-        array_view<const char> arr(buffer.data(), buffer.size());
+        char_array_view arr(buffer.data(), buffer.size());
         return impl::parse_doc(arr);
     }
 } // namespace html
