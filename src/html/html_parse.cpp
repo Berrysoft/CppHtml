@@ -162,11 +162,20 @@ namespace html
                         }
                         else
                         {
-                            if (p.size() > 1 && (current->size() > 1 || (!current->empty() && current->front().type() != html_node_type::text)))
+                            if (p.size() > 1)
                             {
                                 html_node* parent = p[p.size() - 2];
-                                vector<html_node> children(current->begin(), current->end());
-                                current->clear();
+                                vector<html_node> children;
+                                if (!current->empty() && current->front().type() == html_node_type::text)
+                                {
+                                    children.assign(current->begin() + 1, current->end());
+                                    current->erase(current->begin() + 1, current->end());
+                                }
+                                else
+                                {
+                                    children.assign(current->begin(), current->end());
+                                    current->clear();
+                                }
                                 for (html_node& node : children)
                                 {
                                     parent->push_back(move(node));
