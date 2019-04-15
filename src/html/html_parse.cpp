@@ -154,7 +154,10 @@ namespace html
                     tb += pos + 1;
                     auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return pn->tag().name() == cname; });
                     if (it == p.rend())
+                    {
+                        current->push_back({ { static_cast<string>(cname) }, {} });
                         buffer = tb;
+                    }
                     else
                     {
                         if (it == p.rbegin())
