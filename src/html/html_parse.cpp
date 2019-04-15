@@ -130,7 +130,7 @@ namespace html
             return node;
         }
 
-        html_node parse_node_base(array_view<const char>& buffer)
+        html_node parse_node(array_view<const char>& buffer)
         {
             html_node root;
             root.type(html_node_type::node);
@@ -254,7 +254,7 @@ namespace html
         {
             html_doc doc;
             doc.decl(parse_decl(buffer));
-            doc.node(parse_node_base(buffer));
+            doc.node(parse_node(buffer));
             return doc;
         }
     } // namespace impl
@@ -266,7 +266,7 @@ namespace html
 
     html_node html_node::parse(impl::array_view<const char> buffer)
     {
-        return impl::parse_node_base(buffer);
+        return impl::parse_node(buffer);
     }
 
     html_decl html_decl::parse(impl::array_view<const char> buffer)
