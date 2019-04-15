@@ -45,7 +45,7 @@ namespace html
             }
         }
 
-        friend bool operator==(const html_decl& d1, const html_decl& d2);
+        friend inline bool operator==(const html_decl& d1, const html_decl& d2) { return d1.m_type == d2.m_type; }
         friend inline bool operator!=(const html_decl& d1, const html_decl& d2) { return !(d1 == d2); }
     };
 } // namespace html

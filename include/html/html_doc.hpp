@@ -46,7 +46,7 @@ namespace html
             }
         }
 
-        friend bool operator==(const html_doc& d1, const html_doc& d2);
+        friend inline bool operator==(const html_doc& d1, const html_doc& d2) { return d1.m_decl == d2.m_decl && d1.m_node == d2.m_node; }
         friend inline bool operator!=(const html_doc& d1, const html_doc& d2) { return !(d1 == d2); }
     };
 } // namespace html

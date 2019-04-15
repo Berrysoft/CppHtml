@@ -1,6 +1,7 @@
 #ifndef HTML_TAG_HPP
 #define HTML_TAG_HPP
 
+#include <algorithm>
 #include <html/array_view.hpp>
 #include <html/html_utility.hpp>
 #include <map>
@@ -14,6 +15,8 @@ namespace html
         using attr_seq_type = std::map<std::string, std::string>;
         using attr_iterator = typename attr_seq_type::iterator;
         using attr_const_iterator = typename attr_seq_type::const_iterator;
+        using attr_reverse_iterator = typename attr_seq_type::reverse_iterator;
+        using attr_const_reverse_iterator = typename attr_seq_type::const_reverse_iterator;
 
         std::string m_name;
         attr_seq_type m_attrs;
@@ -46,6 +49,13 @@ namespace html
         attr_const_iterator end() const noexcept { return m_attrs.end(); }
         attr_const_iterator cend() const noexcept { return m_attrs.cend(); }
 
+        attr_reverse_iterator rbegin() noexcept { return m_attrs.rbegin(); }
+        attr_const_reverse_iterator rbegin() const noexcept { return m_attrs.rbegin(); }
+        attr_const_reverse_iterator crbegin() const noexcept { return m_attrs.crbegin(); }
+        attr_reverse_iterator rend() noexcept { return m_attrs.rend(); }
+        attr_const_reverse_iterator rend() const noexcept { return m_attrs.rend(); }
+        attr_const_reverse_iterator crend() const noexcept { return m_attrs.crend(); }
+
         void clear() noexcept { m_attrs.clear(); }
         bool contains(const std::string& key) const { return m_attrs.find(key) != m_attrs.end(); }
 
@@ -55,7 +65,7 @@ namespace html
 
         static html_tag parse(impl::array_view<const char> buffer);
 
-        friend bool operator==(const html_tag& t1, const html_tag& t2);
+        friend inline bool operator==(const html_tag& t1, const html_tag& t2) { return t1.m_name == t2.m_name && std::equal(t1.m_attrs.begin(), t1.m_attrs.end(), t2.m_attrs.begin(), t2.m_attrs.end()); }
         friend inline bool operator!=(const html_tag& t1, const html_tag& t2) { return !(t1 == t2); }
     };
 } // namespace html

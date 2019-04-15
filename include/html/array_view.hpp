@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -26,6 +27,8 @@ namespace html
             using const_pointer = const T*;
             using iterator = pointer;
             using const_iterator = const_pointer;
+            using reverse_iterator = std::reverse_iterator<iterator>;
+            using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
             static constexpr std::size_t npos = static_cast<std::size_t>(-1);
 
@@ -51,6 +54,13 @@ namespace html
             constexpr iterator end() noexcept { return m_data + m_size; }
             constexpr const_iterator end() const noexcept { return m_data + m_size; }
             constexpr const_iterator cend() const noexcept { return m_data + m_size; }
+
+            constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+            constexpr const_reverse_iterator rbegin() const noexcept { return reverse_iterator(end()); }
+            constexpr const_reverse_iterator crbegin() const noexcept { return reverse_iterator(cend()); }
+            constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+            constexpr const_reverse_iterator rend() const noexcept { return reverse_iterator(begin()); }
+            constexpr const_reverse_iterator crend() const noexcept { return reverse_iterator(cbegin()); }
 
             constexpr std::size_t find(const T& value) const noexcept
             {

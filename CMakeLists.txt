@@ -10,6 +10,7 @@ file(GLOB LIB_SOURCE "src/html/*.cpp")
 add_library(cpphtml STATIC ${LIB_SOURCE})
 
 install(FILES ${HTML_HEADERS} DESTINATION include/html)
+install(TARGETS cpphtml LIBRARY DESTINATION lib)
 
 find_path(BSTEST_INCLUDE_DIR NAMES bstest.hpp)
 file(GLOB TEST_SOURCE "test/*.cpp")
