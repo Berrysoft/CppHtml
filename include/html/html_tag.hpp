@@ -25,6 +25,7 @@ namespace html
         CPPHTML_API std::ostream& print_open(std::ostream& stream) const;
         CPPHTML_API std::ostream& print_close(std::ostream& stream) const;
         CPPHTML_API std::ostream& print_single(std::ostream& stream) const;
+        CPPHTML_API std::istream& scan(std::istream& stream);
 
         friend class html_node;
 
@@ -70,6 +71,27 @@ namespace html
         }
 
         CPPHTML_API static html_tag parse(std::string_view buffer);
+
+        std::string to_string() const
+        {
+            std::ostringstream stream;
+            print_open(stream);
+            return stream.str();
+        }
+
+        template <typename Char>
+        friend constexpr std::basic_ostream<Char>& operator<<(std::basic_ostream<Char>& stream, const html_tag& tag)
+        {
+            if constexpr (std::is_same_v<Char, char>)
+            {
+                return tag.print_open(stream);
+            }
+            else
+            {
+                return stream << tag.to_string().c_str();
+            }
+        }
+        friend inline std::istream& operator>>(std::istream& stream, html_tag& tag) { return tag.scan(stream); }
 
         friend inline bool operator==(const html_tag& t1, const html_tag& t2) { return t1.m_name == t2.m_name && std::equal(t1.m_attrs.begin(), t1.m_attrs.end(), t2.m_attrs.begin(), t2.m_attrs.end()); }
         friend inline bool operator!=(const html_tag& t1, const html_tag& t2) { return !(t1 == t2); }

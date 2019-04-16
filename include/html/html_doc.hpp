@@ -15,6 +15,7 @@ namespace html
         html_node m_node;
 
         CPPHTML_API std::ostream& print(std::ostream& stream) const;
+        CPPHTML_API std::istream& scan(std::istream& stream);
 
     public:
         html_doc(const html_decl& decl = {}, const html_node& node = {}) : m_decl(std::move(decl)), m_node(std::move(node)) {}
@@ -43,14 +44,14 @@ namespace html
         {
             if constexpr (std::is_same_v<Char, char>)
             {
-                doc.print(stream);
-                return stream;
+                return doc.print(stream);
             }
             else
             {
-                stream << doc.to_string().c_str();
+                return stream << doc.to_string().c_str();
             }
         }
+        friend inline std::istream& operator>>(std::istream& stream, html_doc& doc) { return doc.scan(stream); }
 
         friend inline bool operator==(const html_doc& d1, const html_doc& d2) { return d1.m_decl == d2.m_decl && d1.m_node == d2.m_node; }
         friend inline bool operator!=(const html_doc& d1, const html_doc& d2) { return !(d1 == d2); }

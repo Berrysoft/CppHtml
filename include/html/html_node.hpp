@@ -52,6 +52,7 @@ namespace html
 
         CPPHTML_API std::ostream& print(std::ostream& stream, std::size_t indent) const;
         std::ostream& print(std::ostream& stream) const { return print(stream, 0); }
+        CPPHTML_API std::istream& scan(std::istream& stream);
 
         friend class html_doc;
         friend class html_node_elements_iterator;
@@ -140,14 +141,14 @@ namespace html
         {
             if constexpr (std::is_same_v<Char, char>)
             {
-                node.print(stream);
-                return stream;
+                return node.print(stream);
             }
             else
             {
-                stream << node.to_string().c_str();
+                return stream << node.to_string().c_str();
             }
         }
+        friend inline std::istream& operator>>(std::istream& stream, html_node& node) { return node.scan(stream); }
 
         friend inline bool operator==(const html_node& n1, const html_node& n2) { return n1.m_data == n2.m_data; }
         friend inline bool operator!=(const html_node& n1, const html_node& n2) { return !(n1 == n2); }

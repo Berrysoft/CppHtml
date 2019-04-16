@@ -14,6 +14,7 @@ namespace html
         std::string m_type;
 
         CPPHTML_API std::ostream& print(std::ostream& stream) const;
+        CPPHTML_API std::istream& scan(std::istream& stream);
 
         friend class html_doc;
 
@@ -38,14 +39,14 @@ namespace html
         {
             if constexpr (std::is_same_v<Char, char>)
             {
-                decl.print(stream);
-                return stream;
+                return decl.print(stream);
             }
             else
             {
-                stream << decl.to_string().c_str();
+                return stream << decl.to_string().c_str();
             }
         }
+        friend inline std::istream& operator>>(std::istream& stream, html_decl& decl) { return decl.scan(stream); }
 
         friend inline bool operator==(const html_decl& d1, const html_decl& d2) { return d1.m_type == d2.m_type; }
         friend inline bool operator!=(const html_decl& d1, const html_decl& d2) { return !(d1 == d2); }
