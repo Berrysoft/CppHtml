@@ -84,9 +84,9 @@ namespace html
             }
         }
 
-        PROP_GETSET(tag, html_tag, std::get<node_type>(m_data).tag, std::get<node_type>(m_data).tag)
+        CPPHTML_PROP_GETSET(tag, html_tag, std::get<node_type>(m_data).tag, std::get<node_type>(m_data).tag)
 
-        PROP_GETSET(text, text_type, std::get<text_type>(m_data), m_data)
+        CPPHTML_PROP_GETSET(text, text_type, std::get<text_type>(m_data), m_data)
 
         child_reference operator[](std::size_t index) { return std::get<node_type>(m_data).children[index]; }
         child_const_reference operator[](std::size_t index) const { return std::get<node_type>(m_data).children[index]; }

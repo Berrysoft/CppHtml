@@ -21,7 +21,7 @@ namespace html
     public:
         html_decl(const std::string& type = {}) : m_type(type) {}
 
-        PROP(type, std::string)
+        CPPHTML_PROP(type, std::string)
 
         void swap(html_decl& d) { std::swap(m_type, d.m_type); }
 

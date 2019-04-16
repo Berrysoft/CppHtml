@@ -23,13 +23,25 @@
 #endif // !CPPHTML_API
 #endif // CPPHTML_STATIC_DEFINE
 
-#define PROP_GETSET(name, type, getv, setv)                         \
+#ifndef CPPHTML_CXX20
+#if __cplusplus > 201703L || _MSVC_LANG > 201703L
+#define CPPHTML_CXX20
+#endif
+#endif // !CPPHTML_CXX20
+
+#ifndef CPPHTML_CXX17
+#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
+#define CPPHTML_CXX17
+#endif
+#endif // !CPPHTML_CXX17
+
+#define CPPHTML_PROP_GETSET(name, type, getv, setv)                 \
     constexpr type& name() & noexcept { return getv; }              \
     constexpr const type& name() const& noexcept { return getv; }   \
     constexpr type&& name() && noexcept { return std::move(getv); } \
     void name(const type& value) noexcept { setv = value; }         \
     void name(type&& value) noexcept { setv = std::move(value); }
 
-#define PROP(name, type) PROP_GETSET(name, type, m_##name, m_##name)
+#define CPPHTML_PROP(name, type) CPPHTML_PROP_GETSET(name, type, m_##name, m_##name)
 
 #endif // !HTML_UTILITY_HPP
