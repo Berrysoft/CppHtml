@@ -7,7 +7,7 @@ using namespace html;
 
 int main()
 {
-    istringstream stream("<!doctype html><html><head><title>Title<!--</title>--></head></title><body><h1 align=\"center\">Hello</h1><p>Hello <p>world!<br/></body></html>");
+    istringstream stream("<!doctype html><html><HEAD><title>Title<!--</title>--></head></title><body><h1 align=\"center\">Hello</H1><P>Hello <p>world!<br/></body></html>");
     html_doc doc;
     stream >> doc;
     cout << doc << endl;

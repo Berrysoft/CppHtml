@@ -1,6 +1,7 @@
 #ifndef HTML_PARSE_IMPL_HPP
 #define HTML_PARSE_IMPL_HPP
 
+#include "char_case_iterator.hpp"
 #include <html/html_doc.hpp>
 #include <string_view>
 #include <vector>
@@ -27,6 +28,13 @@ namespace html
     {
         return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end(), char_case_eq);
     }
+
+    template <typename It>
+    inline std::string str_case_ctor(It it1, It it2)
+    {
+        return std::string(char_case_iterator(it1), char_case_iterator(it2));
+    }
+    inline std::string str_case_ctor(const char* data, std::size_t count) { return std::string(char_case_iterator(data), char_case_iterator(data + count)); }
 
     template <typename View>
     inline void skip_space(View& buffer)
@@ -63,11 +71,11 @@ namespace html
         std::size_t pos = buffer.find({ ' ', '/', '>' });
         if (pos == View::npos)
         {
-            html_tag tag(std::string(buffer.begin(), buffer.end()));
+            html_tag tag(str_case_ctor(buffer.begin(), buffer.end()));
             buffer += View::npos;
             return tag;
         }
-        html_tag tag(std::string(buffer.data(), pos));
+        html_tag tag(str_case_ctor(buffer.data(), pos));
         buffer += pos;
         skip_space(buffer);
         while (!buffer.empty() && buffer.front() != '/' && buffer.front() != '>')
@@ -76,13 +84,13 @@ namespace html
             if (pos == View::npos)
             {
                 pos = buffer.find({ ' ', '/', '>' });
-                std::string key(buffer.data(), pos);
+                std::string key = str_case_ctor(buffer.data(), pos);
                 tag[key] = key;
                 buffer += pos;
                 skip_space(buffer);
                 continue;
             }
-            std::string key(buffer.data(), pos);
+            std::string key = str_case_ctor(buffer.data(), pos);
             buffer += pos + 1;
             skip_space(buffer);
             char qc = buffer.front();
@@ -230,7 +238,7 @@ namespace html
                             pos++;
                         }
                         if (pos > 0)
-                            newn.push_back({ std::string(buffer.data(), pos) });
+                            newn.push_back({ str_case_ctor(buffer.data(), pos) });
                         buffer += pos;
                         pos = buffer.find('>');
                         buffer += pos + 1;
