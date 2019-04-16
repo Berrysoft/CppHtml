@@ -79,18 +79,7 @@ namespace html
             return stream.str();
         }
 
-        template <typename Char>
-        friend constexpr std::basic_ostream<Char>& operator<<(std::basic_ostream<Char>& stream, const html_tag& tag)
-        {
-            if constexpr (std::is_same_v<Char, char>)
-            {
-                return tag.print_open(stream);
-            }
-            else
-            {
-                return stream << tag.to_string().c_str();
-            }
-        }
+        friend inline std::ostream& operator<<(std::ostream& stream, const html_tag& tag) { return tag.print_open(stream); }
         friend inline std::istream& operator>>(std::istream& stream, html_tag& tag) { return tag.scan(stream); }
 
         friend inline bool operator==(const html_tag& t1, const html_tag& t2) { return t1.m_name == t2.m_name && std::equal(t1.m_attrs.begin(), t1.m_attrs.end(), t2.m_attrs.begin(), t2.m_attrs.end()); }

@@ -34,18 +34,7 @@ namespace html
             return stream.str();
         }
 
-        template <typename Char>
-        friend constexpr std::basic_ostream<Char>& operator<<(std::basic_ostream<Char>& stream, const html_decl& decl)
-        {
-            if constexpr (std::is_same_v<Char, char>)
-            {
-                return decl.print(stream);
-            }
-            else
-            {
-                return stream << decl.to_string().c_str();
-            }
-        }
+        friend inline std::ostream& operator<<(std::ostream& stream, const html_decl& decl) { return decl.print(stream); }
         friend inline std::istream& operator>>(std::istream& stream, html_decl& decl) { return decl.scan(stream); }
 
         friend inline bool operator==(const html_decl& d1, const html_decl& d2) { return d1.m_type == d2.m_type; }
