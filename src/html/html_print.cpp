@@ -97,7 +97,14 @@ namespace html
                 if (data.children.size() == 1 && data.children.front().type() == html_node_type::text)
                 {
                     data.tag.print_open(stream);
-                    data.children.front().print(stream, 0);
+                    if (tag().name() == "script" || tag().name() == "style")
+                    {
+                        stream << data.children.front().text();
+                    }
+                    else
+                    {
+                        data.children.front().print(stream, 0);
+                    }
                     data.tag.print_close(stream);
                 }
                 else
@@ -119,7 +126,9 @@ namespace html
         }
         case html_node_type::text:
             stream << in;
-            print_ent(stream, get<text_type>(m_data), false);
+            print_ent(stream, get<text_type>(m_data), true);
+            break;
+        default:
             break;
         }
         return stream;

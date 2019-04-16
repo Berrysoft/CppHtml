@@ -27,7 +27,7 @@ Output:
     <title>Title</title>
   </head>
   <body>
-    <h1 align='center'>Hello</h1>
+    <h1 align="center">Hello</h1>
     <p>Hello world!</p>
   </body>
 </html>

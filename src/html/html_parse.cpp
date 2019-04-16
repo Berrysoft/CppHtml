@@ -17,13 +17,18 @@ namespace html
             return equal(buffer.begin(), buffer.begin() + str.size(), str.begin(), str.end(), [](char a, char b) { return tolower(a) == tolower(b); });
         }
 
+        bool str_case_eq(string_view s1, string_view s2)
+        {
+            return equal(s1.begin(), s1.end(), s2.begin(), s2.end(), [](char a, char b) { return tolower(a) == tolower(b); });
+        }
+
         void skip_space(char_array_view& buffer)
         {
             bool ctn;
             do
             {
                 ctn = false;
-                while (!buffer.empty() && buffer.front() >= 1 && buffer.front() <= 255 && isspace(buffer.front()))
+                while (!buffer.empty() && buffer.front() >= 1 && isspace(buffer.front()))
                 {
                     ++buffer;
                     ctn = true;
@@ -153,7 +158,7 @@ namespace html
                     string_view cname(tb.data(), pos);
                     pos = tb.find('>');
                     tb += pos + 1;
-                    auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return pn->tag().name() == cname; });
+                    auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return str_case_eq(pn->tag().name(), cname); });
                     if (it == p.rend())
                     {
                         buffer = tb;
@@ -196,7 +201,7 @@ namespace html
                     if (buffer.front() == '>')
                     {
                         ++buffer;
-                        if (newn.tag().name() == "script" || newn.tag().name() == "style")
+                        if (str_case_eq(newn.tag().name(), "script") || str_case_eq(newn.tag().name(), "style"))
                         {
                             std::size_t pos;
                             auto tb = buffer;
@@ -204,13 +209,22 @@ namespace html
                             {
                                 pos = tb.find('<');
                                 tb += pos;
-                                if (pos == char_array_view::npos || starts_with(tb, "</" + newn.tag().name() + ">"))
-                                    break;
+                                if (pos == char_array_view::npos) break;
+                                if (starts_with(tb, "</"))
+                                {
+                                    auto ttb = tb + 2;
+                                    skip_space(ttb);
+                                    pos = ttb.find({ ' ', '>' });
+                                    if (str_case_eq(newn.tag().name(), string_view(ttb.data(), pos)))
+                                        break;
+                                }
                                 ++tb;
                             }
                             if (tb.data() - buffer.data() > 0)
                                 newn.push_back({ string(buffer.data(), tb.data()) });
                             buffer = tb;
+                            pos = buffer.find('>');
+                            buffer += pos + 1;
                         }
                         current->push_back(move(newn));
                         p.push_back(&current->back());

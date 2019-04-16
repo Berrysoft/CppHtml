@@ -7,7 +7,7 @@ include_directories(include)
 
 file(GLOB HTML_HEADERS "include/html/*.hpp")
 file(GLOB LIB_SOURCE "src/html/*.cpp")
-add_library(cpphtml STATIC ${LIB_SOURCE})
+add_library(cpphtml SHARED ${LIB_SOURCE})
 
 install(FILES ${HTML_HEADERS} DESTINATION include/html)
 install(TARGETS cpphtml LIBRARY DESTINATION lib)

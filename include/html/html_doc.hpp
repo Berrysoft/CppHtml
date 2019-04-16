@@ -14,7 +14,7 @@ namespace html
         html_decl m_decl;
         html_node m_node;
 
-        std::ostream& print(std::ostream& stream) const;
+        CPPHTML_API std::ostream& print(std::ostream& stream) const;
 
     public:
         html_doc(const html_decl& decl = {}, const html_node& node = {}) : m_decl(std::move(decl)), m_node(std::move(node)) {}
@@ -23,7 +23,7 @@ namespace html
 
         PROP(node, html_node)
 
-        static html_doc parse(std::string_view buffer);
+        CPPHTML_API static html_doc parse(std::string_view buffer);
 
         std::string to_string() const
         {

@@ -50,7 +50,7 @@ namespace html
 
         data_type m_data;
 
-        std::ostream& print(std::ostream& stream, std::size_t indent) const;
+        CPPHTML_API std::ostream& print(std::ostream& stream, std::size_t indent) const;
         std::ostream& print(std::ostream& stream) const { return print(stream, 0); }
 
         friend class html_doc;
@@ -124,7 +124,7 @@ namespace html
         html_node_elements_view operator[](const std::string& name);
         html_node_const_elements_view operator[](const std::string& name) const;
 
-        static html_node parse(std::string_view buffer);
+        CPPHTML_API static html_node parse(std::string_view buffer);
 
         std::string to_string() const
         {

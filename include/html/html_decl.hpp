@@ -13,7 +13,7 @@ namespace html
     private:
         std::string m_type;
 
-        std::ostream& print(std::ostream& stream) const;
+        CPPHTML_API std::ostream& print(std::ostream& stream) const;
 
         friend class html_doc;
 
@@ -22,7 +22,7 @@ namespace html
 
         PROP(type, std::string)
 
-        static html_decl parse(std::string_view buffer);
+        CPPHTML_API static html_decl parse(std::string_view buffer);
 
         std::string to_string() const
         {
