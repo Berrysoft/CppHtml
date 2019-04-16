@@ -8,9 +8,9 @@ using namespace std;
 
 namespace html
 {
-    bool starts_with(const char_array_view& buffer, string_view str)
+    bool starts_with(char_array_view& buffer, string_view str)
     {
-        if (buffer.size() < str.size()) return false;
+        if (!buffer.enlarge(str.size())) return false;
         return equal(buffer.begin(), buffer.begin() + str.size(), str.begin(), str.end(), [](char a, char b) { return tolower(a) == tolower(b); });
     }
 
@@ -52,7 +52,7 @@ namespace html
         if (pos == char_array_view::npos)
         {
             html_tag tag(string(buffer.begin(), buffer.end()));
-            buffer = {};
+            buffer += char_array_view::npos;
             return tag;
         }
         html_tag tag(string(buffer.data(), pos));
@@ -86,7 +86,7 @@ namespace html
             if (pos == char_array_view::npos)
             {
                 tag[key] = string(buffer.begin(), buffer.end());
-                buffer = {};
+                buffer += char_array_view::npos;
             }
             else
             {
@@ -255,7 +255,7 @@ namespace html
         if (pos == char_array_view::npos)
         {
             decl.type(string(buffer.begin(), buffer.end()));
-            buffer = {};
+            buffer += char_array_view::npos;
         }
         else
         {
