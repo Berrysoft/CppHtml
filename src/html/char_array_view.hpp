@@ -37,24 +37,32 @@ namespace html
         constexpr const_iterator begin() const noexcept { return m_data; }
         constexpr const_iterator end() const noexcept { return m_data + m_size; }
 
-        constexpr std::size_t find(const char& value) const noexcept
+        template <typename Pred>
+        constexpr std::size_t find_if(Pred&& pred, std::size_t off = 0) const noexcept
         {
-            for (std::size_t i = 0; i < m_size; i++)
+            for (std::size_t i = off; i < m_size; i++)
             {
-                if (m_data[i] == value) return i;
+                if (pred(m_data[i])) return i;
             }
             return npos;
         }
-        constexpr std::size_t find(std::initializer_list<char> values) const noexcept
+
+        constexpr std::size_t find(const char& value, std::size_t off = 0) const noexcept
         {
-            for (std::size_t i = 0; i < m_size; i++)
-            {
-                for (const char value : values)
-                {
-                    if (m_data[i] == value) return i;
-                }
-            }
-            return npos;
+            return find_if([&value](char c) { return c == value; }, off);
+        }
+        constexpr std::size_t find(std::initializer_list<char> values, std::size_t off = 0) const noexcept
+        {
+            return find_if(
+                [values](char c) {
+                    for (const char value : values)
+                    {
+                        if (value == c)
+                            return true;
+                    }
+                    return false;
+                },
+                off);
         }
 
         constexpr char_array_view& operator+=(std::size_t n)

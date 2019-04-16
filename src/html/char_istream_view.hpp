@@ -8,10 +8,6 @@ namespace html
 {
     class char_istream_view
     {
-    private:
-        std::istream& m_stream;
-        std::vector<char> m_buffer;
-
     public:
         using value_type = char;
         using buffer_type = std::vector<char>;
@@ -30,20 +26,20 @@ namespace html
         {
             if (m_stream)
             {
-                m_buffer.push_back(m_stream.get());
+                m_buffer.push_back((char)m_stream.get());
             }
         }
         char_istream_view(const char_istream_view&) = delete;
         char_istream_view& operator=(const char_istream_view&) = delete;
 
-        bool empty() const { return !m_stream; }
+        bool empty() const { return !m_stream && m_buffer.empty(); }
         bool enlarge(std::size_t s)
         {
             while (m_stream && s--)
             {
-                m_buffer.push_back(m_stream.get());
+                m_buffer.push_back((char)m_stream.get());
             }
-            return !s;
+            return !(s + 1);
         }
 
         const_pointer data() const { return m_buffer.data(); }
@@ -55,41 +51,48 @@ namespace html
         const_iterator begin() const { return m_buffer.begin(); }
         const_iterator end() const { return m_buffer.end(); }
 
-        std::size_t find(const char& value)
+        template <typename Pred>
+        std::size_t find_if(Pred&& pred, std::size_t off = 0)
         {
-            std::size_t i = 0;
-            for (; i < m_buffer.size(); i++)
+            std::size_t i = off;
+            if (i < m_buffer.size())
             {
-                if (m_buffer[i] == value) return i;
+                for (; i < m_buffer.size(); i++)
+                {
+                    if (pred(m_buffer[i])) return i;
+                }
+            }
+            else
+            {
+                off -= m_buffer.size();
+                while (m_stream && off--)
+                    m_buffer.push_back((char)m_stream.get());
             }
             while (m_stream)
             {
-                m_buffer.push_back(m_stream.get());
-                if (m_buffer.back() == value) return i;
+                m_buffer.push_back((char)m_stream.get());
+                if (pred(m_buffer.back())) return i;
                 i++;
             }
             return npos;
         }
-        std::size_t find(std::initializer_list<char> values)
+
+        std::size_t find(const char& value, std::size_t off = 0)
         {
-            std::size_t i = 0;
-            for (; i < m_buffer.size(); i++)
-            {
-                for (const char value : values)
-                {
-                    if (m_buffer[i] == value) return i;
-                }
-            }
-            while (m_stream)
-            {
-                m_buffer.push_back(m_stream.get());
-                for (const char value : values)
-                {
-                    if (m_buffer.back() == value) return i;
-                }
-                i++;
-            }
-            return npos;
+            return find_if([&value](char c) { return c == value; }, off);
+        }
+        std::size_t find(std::initializer_list<char> values, std::size_t off = 0)
+        {
+            return find_if(
+                [values](char c) {
+                    for (const char value : values)
+                    {
+                        if (value == c)
+                            return true;
+                    }
+                    return false;
+                },
+                off);
         }
 
         char_istream_view& operator+=(std::size_t n)
@@ -104,17 +107,19 @@ namespace html
                 m_buffer.clear();
                 if (m_stream.seekg(n, std::ios_base::cur))
                 {
-                    m_buffer.push_back(m_stream.get());
+                    m_buffer.push_back((char)m_stream.get());
                 }
             }
+            return *this;
         }
         char_istream_view& operator++()
         {
             if (m_buffer.size() <= 1)
             {
-                m_buffer.push_back(m_stream.get());
+                m_buffer.push_back((char)m_stream.get());
             }
             m_buffer.erase(m_buffer.begin());
+            return *this;
         }
     };
 } // namespace html
