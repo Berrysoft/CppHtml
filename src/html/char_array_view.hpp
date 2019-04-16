@@ -26,6 +26,7 @@ namespace html
         char_array_view& operator=(const char_array_view&) = delete;
 
         constexpr bool empty() const noexcept { return !m_size; }
+        constexpr std::size_t size() const noexcept { return m_size; }
         constexpr bool enlarge(std::size_t s) noexcept { return m_size >= s; }
 
         constexpr const_pointer data() const noexcept { return m_data; }
@@ -49,7 +50,7 @@ namespace html
 
         constexpr std::size_t find(const char& value, std::size_t off = 0) const noexcept
         {
-            return find_if([&value](char c) { return c == value; }, off);
+            return find_if([value](char c) { return c == value; }, off);
         }
         constexpr std::size_t find(std::initializer_list<char> values, std::size_t off = 0) const noexcept
         {

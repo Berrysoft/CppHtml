@@ -1,5 +1,5 @@
 # CppHtml
-A modern C++ HTML parser. Still has lots of bugs...
+A modern C++ HTML parser.
 
 ## Define
 ``` cpp
@@ -56,3 +56,9 @@ Output:
 ```
 Hello world!
 ```
+
+## Input
+You can input a `html_doc` from a `std::istream`, but **NOT** from `cin`.
+
+## Tidy
+The output html is always tidy.

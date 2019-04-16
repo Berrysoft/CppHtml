@@ -33,6 +33,7 @@ namespace html
         char_istream_view& operator=(const char_istream_view&) = delete;
 
         bool empty() const { return !m_stream && m_buffer.empty(); }
+        std::size_t size() const { return m_buffer.size(); }
         bool enlarge(std::size_t s)
         {
             while (m_stream && s--)
@@ -55,16 +56,17 @@ namespace html
         std::size_t find_if(Pred&& pred, std::size_t off = 0)
         {
             std::size_t i = off;
-            if (i < m_buffer.size())
+            std::size_t bufs = m_buffer.size();
+            if (i < bufs)
             {
-                for (; i < m_buffer.size(); i++)
+                for (; i < bufs; i++)
                 {
                     if (pred(m_buffer[i])) return i;
                 }
             }
             else
             {
-                off -= m_buffer.size();
+                off -= bufs;
                 while (m_stream && off--)
                     m_buffer.push_back((char)m_stream.get());
             }
@@ -79,7 +81,7 @@ namespace html
 
         std::size_t find(const char& value, std::size_t off = 0)
         {
-            return find_if([&value](char c) { return c == value; }, off);
+            return find_if([value](char c) { return c == value; }, off);
         }
         std::size_t find(std::initializer_list<char> values, std::size_t off = 0)
         {

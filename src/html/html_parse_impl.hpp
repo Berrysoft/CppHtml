@@ -12,14 +12,14 @@ namespace html
     template <typename View>
     inline bool starts_with(View& buffer, std::string_view str)
     {
-        if (!buffer.enlarge(str.size())) return false;
+        if (str.size() > buffer.size() && !buffer.enlarge(str.size() - buffer.size())) return false;
         return std::equal(buffer.begin(), buffer.begin() + str.size(), str.begin(), str.end(), char_case_eq);
     }
 
     template <typename View>
     inline bool starts_with(View& buffer, std::size_t off, std::string_view str)
     {
-        if (!buffer.enlarge(str.size() + off)) return false;
+        if ((str.size() + off > buffer.size()) && !buffer.enlarge(str.size() + off - buffer.size())) return false;
         return std::equal(buffer.begin() + off, buffer.begin() + str.size() + off, str.begin(), str.end(), char_case_eq);
     }
 
@@ -215,10 +215,10 @@ namespace html
                     ++buffer;
                     if (str_case_eq(newn.tag().name(), "script") || str_case_eq(newn.tag().name(), "style"))
                     {
-                        std::size_t pos;
+                        std::size_t pos = 0;
                         while (true)
                         {
-                            pos = buffer.find('<');
+                            pos = buffer.find('<', pos);
                             if (pos == View::npos) break;
                             if (starts_with(buffer, pos, "</"))
                             {
@@ -234,9 +234,13 @@ namespace html
                         buffer += pos;
                         pos = buffer.find('>');
                         buffer += pos + 1;
+                        current->push_back(std::move(newn));
                     }
-                    current->push_back(std::move(newn));
-                    p.push_back(&current->back());
+                    else
+                    {
+                        current->push_back(std::move(newn));
+                        p.push_back(&current->back());
+                    }
                 }
                 else
                 {
@@ -253,7 +257,7 @@ namespace html
             }
             }
         }
-        return root.front();
+        return root.empty() ? html_node() : root.front();
     }
 
     template <typename View>
