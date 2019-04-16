@@ -23,6 +23,12 @@ namespace html
 
         PROP(node, html_node)
 
+        void swap(html_doc& d)
+        {
+            std::swap(m_decl, d.m_decl);
+            std::swap(m_node, d.m_node);
+        }
+
         CPPHTML_API static html_doc parse(std::string_view buffer);
 
         std::string to_string() const
@@ -49,6 +55,8 @@ namespace html
         friend inline bool operator==(const html_doc& d1, const html_doc& d2) { return d1.m_decl == d2.m_decl && d1.m_node == d2.m_node; }
         friend inline bool operator!=(const html_doc& d1, const html_doc& d2) { return !(d1 == d2); }
     };
+
+    inline void swap(html_doc& d1, html_doc& d2) { d1.swap(d2); }
 } // namespace html
 
 #endif //!HTML_DOC_HPP

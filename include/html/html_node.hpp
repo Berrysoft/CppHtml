@@ -124,6 +124,8 @@ namespace html
         html_node_elements_view operator[](const std::string& name);
         html_node_const_elements_view operator[](const std::string& name) const;
 
+        void swap(html_node& n) { std::swap(m_data, n.m_data); }
+
         CPPHTML_API static html_node parse(std::string_view buffer);
 
         std::string to_string() const
@@ -150,6 +152,8 @@ namespace html
         friend inline bool operator==(const html_node& n1, const html_node& n2) { return n1.m_data == n2.m_data; }
         friend inline bool operator!=(const html_node& n1, const html_node& n2) { return !(n1 == n2); }
     };
+
+    inline void swap(html_node& n1, html_node& n2) { n1.swap(n2); }
 
     class html_node_const_elements_iterator
     {
@@ -244,10 +248,7 @@ namespace html
         }
     };
 
-    inline void swap(html_node_const_elements_iterator& it1, html_node_const_elements_iterator& it2)
-    {
-        it1.swap(it2);
-    }
+    inline void swap(html_node_const_elements_iterator& it1, html_node_const_elements_iterator& it2) { it1.swap(it2); }
 
     class html_node_elements_iterator : public html_node_const_elements_iterator
     {

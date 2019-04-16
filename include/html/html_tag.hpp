@@ -63,11 +63,19 @@ namespace html
         attr_iterator erase(attr_const_iterator first, attr_const_iterator last) { return m_attrs.erase(first, last); }
         std::size_t erase(const std::string& key) { return m_attrs.erase(key); }
 
+        void swap(html_tag& t)
+        {
+            std::swap(m_name, t.m_name);
+            std::swap(m_attrs, t.m_attrs);
+        }
+
         CPPHTML_API static html_tag parse(std::string_view buffer);
 
         friend inline bool operator==(const html_tag& t1, const html_tag& t2) { return t1.m_name == t2.m_name && std::equal(t1.m_attrs.begin(), t1.m_attrs.end(), t2.m_attrs.begin(), t2.m_attrs.end()); }
         friend inline bool operator!=(const html_tag& t1, const html_tag& t2) { return !(t1 == t2); }
     };
+
+    inline void swap(html_tag& t1, html_tag& t2) { t1.swap(t2); }
 } // namespace html
 
 #endif //!HTML_TAG_HPP
