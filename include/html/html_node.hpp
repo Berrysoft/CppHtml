@@ -24,6 +24,19 @@ namespace html
     {
         html_tag tag;
         std::vector<html_node> children;
+
+        html_node_data() = default;
+        html_node_data(const html_node_data&) = default;
+        html_node_data(html_node_data&&) noexcept = default;
+
+        html_node_data& operator=(const html_node_data&) = default;
+        html_node_data& operator=(html_node_data&&) noexcept = default;
+
+        void swap(html_node_data& d2) noexcept
+        {
+            tag.swap(d2.tag);
+            children.swap(d2.children);
+        }
     };
 
     inline bool operator==(const html_node_data& d1, const html_node_data& d2) { return d1.tag == d2.tag && std::equal(d1.children.begin(), d1.children.end(), d2.children.begin(), d2.children.end()); }
@@ -58,11 +71,21 @@ namespace html
         friend class html_node_elements_iterator;
         friend class html_node_const_elements_iterator;
 
+        constexpr node_type& get_node() & { return std::get<node_type>(m_data); }
+        constexpr node_type const& get_node() const& { return std::get<node_type>(m_data); }
+        constexpr node_type&& get_node() && { return std::get<node_type>(std::move(m_data)); }
+
     public:
         html_node() : m_data() {}
         html_node(node_type data) : m_data(std::move(data)) {}
         html_node(html_tag tag, std::vector<html_node> children) : m_data(html_node_data{ tag, children }) {}
         html_node(text_type data) : m_data(std::move(data)) {}
+
+        html_node(const html_node&) = default;
+        html_node(html_node&&) noexcept = default;
+
+        html_node& operator=(const html_node&) = default;
+        html_node& operator=(html_node&&) noexcept = default;
 
         constexpr html_node_type type() const noexcept { return static_cast<html_node_type>(m_data.index()); }
         void type(html_node_type value)
@@ -84,57 +107,50 @@ namespace html
             }
         }
 
-        CPPHTML_PROP_GETSET(tag, html_tag, std::get<node_type>(m_data).tag, std::get<node_type>(m_data).tag)
+        CPPHTML_PROP_GETSET(tag, html_tag, get_node().tag, get_node().tag)
 
         CPPHTML_PROP_GETSET(text, text_type, std::get<text_type>(m_data), m_data)
 
-        child_reference operator[](std::size_t index) { return std::get<node_type>(m_data).children[index]; }
-        child_const_reference operator[](std::size_t index) const { return std::get<node_type>(m_data).children[index]; }
+        child_reference operator[](std::size_t index) { return get_node().children[index]; }
+        child_const_reference operator[](std::size_t index) const { return get_node().children[index]; }
 
-        bool empty() const noexcept { return std::get<node_type>(m_data).children.empty(); }
-        std::size_t size() const noexcept { return std::get<node_type>(m_data).children.size(); }
+        bool empty() const { return get_node().children.empty(); }
+        std::size_t size() const { return get_node().children.size(); }
 
-        child_reference front() { return std::get<node_type>(m_data).children.front(); }
-        child_const_reference front() const { return std::get<node_type>(m_data).children.front(); }
-        child_reference back() { return std::get<node_type>(m_data).children.back(); }
-        child_const_reference back() const { return std::get<node_type>(m_data).children.back(); }
+        child_reference front() { return get_node().children.front(); }
+        child_const_reference front() const { return get_node().children.front(); }
+        child_reference back() { return get_node().children.back(); }
+        child_const_reference back() const { return get_node().children.back(); }
 
-        child_iterator begin() noexcept { return std::get<node_type>(m_data).children.begin(); }
-        child_const_iterator begin() const noexcept { return std::get<node_type>(m_data).children.begin(); }
-        child_const_iterator cbegin() const noexcept { return std::get<node_type>(m_data).children.cbegin(); }
-        child_iterator end() noexcept { return std::get<node_type>(m_data).children.end(); }
-        child_const_iterator end() const noexcept { return std::get<node_type>(m_data).children.end(); }
-        child_const_iterator cend() const noexcept { return std::get<node_type>(m_data).children.cend(); }
+        child_iterator begin() { return get_node().children.begin(); }
+        child_const_iterator begin() const { return get_node().children.begin(); }
+        child_const_iterator cbegin() const { return get_node().children.cbegin(); }
+        child_iterator end() { return get_node().children.end(); }
+        child_const_iterator end() const { return get_node().children.end(); }
+        child_const_iterator cend() const { return get_node().children.cend(); }
 
-        child_reverse_iterator rbegin() noexcept { return std::get<node_type>(m_data).children.rbegin(); }
-        child_const_reverse_iterator rbegin() const noexcept { return std::get<node_type>(m_data).children.rbegin(); }
-        child_const_reverse_iterator crbegin() const noexcept { return std::get<node_type>(m_data).children.crbegin(); }
-        child_reverse_iterator rend() noexcept { return std::get<node_type>(m_data).children.rend(); }
-        child_const_reverse_iterator rend() const noexcept { return std::get<node_type>(m_data).children.rend(); }
-        child_const_reverse_iterator crend() const noexcept { return std::get<node_type>(m_data).children.crend(); }
+        child_reverse_iterator rbegin() { return get_node().children.rbegin(); }
+        child_const_reverse_iterator rbegin() const { return get_node().children.rbegin(); }
+        child_const_reverse_iterator crbegin() const { return get_node().children.crbegin(); }
+        child_reverse_iterator rend() { return get_node().children.rend(); }
+        child_const_reverse_iterator rend() const { return get_node().children.rend(); }
+        child_const_reverse_iterator crend() const { return get_node().children.crend(); }
 
-        void clear() noexcept { return std::get<node_type>(m_data).children.clear(); }
-        void push_back(const child_type& child) { std::get<node_type>(m_data).children.push_back(child); }
-        void push_back(child_type&& child) { std::get<node_type>(m_data).children.push_back(std::move(child)); }
-        void pop_back() { std::get<node_type>(m_data).children.pop_back(); }
-        child_iterator insert(child_const_iterator pos, const child_type& child) { return std::get<node_type>(m_data).children.insert(pos, child); }
-        child_iterator insert(child_const_iterator pos, child_type&& child) { return std::get<node_type>(m_data).children.insert(pos, std::move(child)); }
-        child_iterator erase(child_const_iterator pos) { return std::get<node_type>(m_data).children.erase(pos); }
-        child_iterator erase(child_const_iterator first, child_const_iterator last) { return std::get<node_type>(m_data).children.erase(first, last); }
+        void clear() { return get_node().children.clear(); }
+        void push_back(const child_type& child) { get_node().children.push_back(child); }
+        void push_back(child_type&& child) { get_node().children.push_back(std::move(child)); }
+        void pop_back() { get_node().children.pop_back(); }
+        child_iterator insert(child_const_iterator pos, const child_type& child) { return get_node().children.insert(pos, child); }
+        child_iterator insert(child_const_iterator pos, child_type&& child) { return get_node().children.insert(pos, std::move(child)); }
+        child_iterator erase(child_const_iterator pos) { return get_node().children.erase(pos); }
+        child_iterator erase(child_const_iterator first, child_const_iterator last) { return get_node().children.erase(first, last); }
 
         html_node_elements_view operator[](const std::string& name);
         html_node_const_elements_view operator[](const std::string& name) const;
 
-        void swap(html_node& n) { std::swap(m_data, n.m_data); }
+        void swap(html_node& n) noexcept { m_data.swap(n.m_data); }
 
         CPPHTML_API static html_node parse(std::string_view buffer);
-
-        std::string to_string() const
-        {
-            std::ostringstream stream;
-            print(stream);
-            return stream.str();
-        }
 
         friend inline std::ostream& operator<<(std::ostream& stream, const html_node& node) { return node.print(stream); }
         friend inline std::istream& operator>>(std::istream& stream, html_node& node) { return node.scan(stream); }
@@ -142,8 +158,6 @@ namespace html
         friend inline bool operator==(const html_node& n1, const html_node& n2) { return n1.m_data == n2.m_data; }
         friend inline bool operator!=(const html_node& n1, const html_node& n2) { return !(n1 == n2); }
     };
-
-    inline void swap(html_node& n1, html_node& n2) { n1.swap(n2); }
 
     class html_node_const_elements_iterator
     {

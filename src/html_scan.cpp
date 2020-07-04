@@ -11,8 +11,7 @@ namespace html
     {
         string buffer(istreambuf_iterator<char>{ stream }, istreambuf_iterator<char>{});
         string_view view = buffer;
-        html_decl decl = parse_decl(view);
-        swap(decl);
+        *this = parse_decl(view);
         return stream;
     }
 
@@ -20,8 +19,7 @@ namespace html
     {
         string buffer(istreambuf_iterator<char>{ stream }, istreambuf_iterator<char>{});
         string_view view = buffer;
-        html_tag tag = parse_tag(view);
-        swap(tag);
+        *this = parse_tag(view);
         return stream;
     }
 
@@ -29,8 +27,7 @@ namespace html
     {
         string buffer(istreambuf_iterator<char>{ stream }, istreambuf_iterator<char>{});
         string_view view = buffer;
-        html_node node = parse_node(view);
-        swap(node);
+        *this = parse_node(view);
         return stream;
     }
 
@@ -38,8 +35,7 @@ namespace html
     {
         string buffer(istreambuf_iterator<char>{ stream }, istreambuf_iterator<char>{});
         string_view view = buffer;
-        html_doc doc = parse_doc(view);
-        swap(doc);
+        *this = parse_doc(view);
         return stream;
     }
 } // namespace html

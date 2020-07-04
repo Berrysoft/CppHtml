@@ -32,6 +32,11 @@ namespace html
     public:
         html_tag(const std::string& name = {}) : m_name(name) {}
         html_tag(const std::string& name, const attr_seq_type& attrs) : m_name(name), m_attrs(std::move(attrs)) {}
+        html_tag(const html_tag&) = default;
+        html_tag(html_tag&&) noexcept = default;
+
+        html_tag& operator=(const html_tag&) = default;
+        html_tag& operator=(html_tag&&) noexcept = default;
 
         CPPHTML_PROP(name, std::string)
 
@@ -64,10 +69,10 @@ namespace html
         attr_iterator erase(attr_const_iterator first, attr_const_iterator last) { return m_attrs.erase(first, last); }
         std::size_t erase(const std::string& key) { return m_attrs.erase(key); }
 
-        void swap(html_tag& t)
+        void swap(html_tag& t) noexcept
         {
-            std::swap(m_name, t.m_name);
-            std::swap(m_attrs, t.m_attrs);
+            m_name.swap(t.m_name);
+            m_attrs.swap(t.m_attrs);
         }
 
         CPPHTML_API static html_tag parse(std::string_view buffer);
@@ -86,7 +91,7 @@ namespace html
         friend inline bool operator!=(const html_tag& t1, const html_tag& t2) { return !(t1 == t2); }
     };
 
-    inline void swap(html_tag& t1, html_tag& t2) { t1.swap(t2); }
+    inline void swap(html_tag& t1, html_tag& t2) noexcept { t1.swap(t2); }
 } // namespace html
 
 #endif //!HTML_TAG_HPP

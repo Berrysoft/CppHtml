@@ -20,19 +20,17 @@ namespace html
 
     public:
         html_decl(const std::string& type = {}) : m_type(type) {}
+        html_decl(const html_decl&) = default;
+        html_decl(html_decl&&) noexcept = default;
+
+        html_decl& operator=(const html_decl&) = default;
+        html_decl& operator=(html_decl&&) noexcept = default;
 
         CPPHTML_PROP(type, std::string)
 
-        void swap(html_decl& d) { std::swap(m_type, d.m_type); }
+        void swap(html_decl& d) noexcept { m_type.swap(d.m_type); }
 
         CPPHTML_API static html_decl parse(std::string_view buffer);
-
-        std::string to_string() const
-        {
-            std::ostringstream stream;
-            print(stream);
-            return stream.str();
-        }
 
         friend inline std::ostream& operator<<(std::ostream& stream, const html_decl& decl) { return decl.print(stream); }
         friend inline std::istream& operator>>(std::istream& stream, html_decl& decl) { return decl.scan(stream); }
@@ -40,8 +38,6 @@ namespace html
         friend inline bool operator==(const html_decl& d1, const html_decl& d2) { return d1.m_type == d2.m_type; }
         friend inline bool operator!=(const html_decl& d1, const html_decl& d2) { return !(d1 == d2); }
     };
-
-    inline void swap(html_decl& d1, html_decl& d2) { d1.swap(d2); }
 } // namespace html
 
 #endif //!HTML_DECL_HPP
