@@ -1,3 +1,4 @@
+#include <fstream>
 #include <html/html_doc.hpp>
 #include <iostream>
 #include <sstream>
@@ -15,4 +16,5 @@ int main()
     {
         cout << p.front().text();
     }
+    cout << endl;
 }
