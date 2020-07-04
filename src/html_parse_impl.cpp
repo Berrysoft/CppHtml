@@ -7,26 +7,26 @@ using namespace std;
 
 namespace html
 {
-    inline bool char_case_eq(char a, char b) noexcept { return std::tolower(a) == std::tolower(b); }
+    inline bool char_case_eq(char a, char b) noexcept { return tolower(a) == tolower(b); }
 
-    inline bool starts_with(std::string_view buffer, std::string_view str)
+    inline bool starts_with(string_view buffer, string_view str)
     {
         if (buffer.size() < str.size()) return false;
-        return std::equal(buffer.begin(), buffer.begin() + str.size(), str.begin(), str.end(), char_case_eq);
+        return equal(buffer.begin(), buffer.begin() + str.size(), str.begin(), str.end(), char_case_eq);
     }
 
-    inline bool str_case_eq(std::string_view s1, std::string_view s2)
+    inline bool str_case_eq(string_view s1, string_view s2)
     {
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end(), char_case_eq);
+        return equal(s1.begin(), s1.end(), s2.begin(), s2.end(), char_case_eq);
     }
 
-    inline std::string tolower_inplace(std::string&& str) noexcept
+    inline string tolower_inplace(string&& str) noexcept
     {
-        std::transform(str.begin(), str.end(), str.begin(), std::tolower);
-        return std::move(str);
+        transform(str.begin(), str.end(), str.begin(), static_cast<int (*)(int)>(tolower));
+        return move(str);
     }
 
-    inline void skip_space(std::string_view& buffer)
+    inline void skip_space(string_view& buffer)
     {
         bool ctn;
         do
@@ -50,34 +50,34 @@ namespace html
         } while (ctn);
     }
 
-    html_tag parse_tag(std::string_view& buffer)
+    html_tag parse_tag(string_view& buffer)
     {
         skip_space(buffer);
         if (buffer.empty() || buffer.front() != '<') return {};
         buffer = buffer.substr(1);
-        std::size_t pos = buffer.find_first_of(" />");
-        if (pos == std::string_view::npos)
+        size_t pos = buffer.find_first_of(" />");
+        if (pos == string_view::npos)
         {
-            html_tag tag(tolower_inplace(std::string(buffer)));
+            html_tag tag(tolower_inplace(string(buffer)));
             buffer = {};
             return tag;
         }
-        html_tag tag(tolower_inplace(std::string(buffer.data(), pos)));
+        html_tag tag(tolower_inplace(string(buffer.data(), pos)));
         buffer = buffer.substr(pos);
         skip_space(buffer);
         while (!buffer.empty() && buffer.front() != '/' && buffer.front() != '>')
         {
             pos = buffer.find('=');
-            if (pos == std::string_view::npos)
+            if (pos == string_view::npos)
             {
                 pos = buffer.find_first_of(" />");
-                std::string key = tolower_inplace(std::string(buffer.data(), pos));
+                string key = tolower_inplace(string(buffer.data(), pos));
                 tag[key] = key;
                 buffer = buffer.substr(pos);
                 skip_space(buffer);
                 continue;
             }
-            std::string key = tolower_inplace(std::string(buffer.data(), pos));
+            string key = tolower_inplace(string(buffer.data(), pos));
             buffer = buffer.substr(pos + 1);
             skip_space(buffer);
             char qc = buffer.front();
@@ -90,14 +90,14 @@ namespace html
                 buffer = buffer.substr(1);
                 pos = buffer.find(qc);
             }
-            if (pos == std::string_view::npos)
+            if (pos == string_view::npos)
             {
-                tag[key] = std::string(buffer.begin(), buffer.end());
+                tag[key] = string(buffer.begin(), buffer.end());
                 buffer = {};
             }
             else
             {
-                tag[key] = std::string(buffer.data(), pos);
+                tag[key] = string(buffer.data(), pos);
                 buffer = buffer.substr(pos + 1);
             }
             skip_space(buffer);
@@ -105,7 +105,7 @@ namespace html
         return tag;
     }
 
-    inline html_node_type parse_node_type(std::string_view& buffer)
+    inline html_node_type parse_node_type(string_view& buffer)
     {
         skip_space(buffer);
         if (buffer.empty())
@@ -121,31 +121,31 @@ namespace html
             return html_node_type::text;
     }
 
-    inline html_node parse_text_node(std::string_view& buffer)
+    inline html_node parse_text_node(string_view& buffer)
     {
         skip_space(buffer);
         html_node node;
         node.type(html_node_type::text);
-        std::size_t pos = buffer.find('<');
-        if (pos == std::string_view::npos)
+        size_t pos = buffer.find('<');
+        if (pos == string_view::npos)
         {
-            node.text(std::string(buffer));
+            node.text(string(buffer));
             buffer = {};
         }
         else
         {
-            node.text(std::string(buffer.data(), pos));
+            node.text(string(buffer.data(), pos));
             buffer = buffer.substr(pos);
         }
         return node;
     }
 
-    html_node parse_node(std::string_view& buffer)
+    html_node parse_node(string_view& buffer)
     {
         html_node root;
         root.type(html_node_type::node);
-        std::vector<html_node*> p = { &root };
-        std::vector<html_node*> np;
+        vector<html_node*> p = { &root };
+        vector<html_node*> np;
         while (true)
         {
             if (p.empty()) break;
@@ -156,10 +156,10 @@ namespace html
             {
             case html_node_type::none:
             {
-                std::size_t pos = buffer.find('/');
+                size_t pos = buffer.find('/');
                 pos++;
-                std::size_t pos2 = buffer.find_first_of(" >", pos);
-                std::string_view cname(buffer.data() + pos, pos2 - pos);
+                size_t pos2 = buffer.find_first_of(" >", pos);
+                string_view cname(buffer.data() + pos, pos2 - pos);
                 pos = buffer.find('>', pos);
                 pos++;
                 auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return str_case_eq(pn->tag().name(), cname); });
@@ -178,7 +178,7 @@ namespace html
                         if (p.size() > 1)
                         {
                             html_node* parent = p[p.size() - 2];
-                            std::vector<html_node> children;
+                            vector<html_node> children;
                             if (!current->empty() && current->front().type() == html_node_type::text)
                             {
                                 children.assign(current->begin() + 1, current->end());
@@ -191,7 +191,7 @@ namespace html
                             }
                             for (html_node& node : children)
                             {
-                                parent->push_back(std::move(node));
+                                parent->push_back(move(node));
                             }
                         }
                     }
@@ -208,38 +208,38 @@ namespace html
                     buffer = buffer.substr(1);
                     if (str_case_eq(newn.tag().name(), "script") || str_case_eq(newn.tag().name(), "style"))
                     {
-                        std::size_t pos = 0;
+                        size_t pos = 0;
                         while (true)
                         {
                             pos = buffer.find('<', pos);
-                            if (pos == std::string_view::npos) break;
+                            if (pos == string_view::npos) break;
                             if (starts_with(buffer.substr(pos), "</"))
                             {
                                 auto pos2 = pos + 2;
                                 auto pos3 = buffer.find_first_of(" >", pos2);
-                                if (str_case_eq(newn.tag().name(), std::string_view(buffer.data() + pos2, pos3 - pos2)))
+                                if (str_case_eq(newn.tag().name(), string_view(buffer.data() + pos2, pos3 - pos2)))
                                     break;
                             }
                             pos++;
                         }
                         if (pos > 0)
-                            newn.push_back(tolower_inplace(std::string(buffer.data(), pos)));
+                            newn.push_back(tolower_inplace(string(buffer.data(), pos)));
                         buffer = buffer.substr(pos);
                         pos = buffer.find('>');
                         buffer = buffer.substr(pos + 1);
-                        current->push_back(std::move(newn));
+                        current->push_back(move(newn));
                     }
                     else
                     {
-                        current->push_back(std::move(newn));
+                        current->push_back(move(newn));
                         p.push_back(&current->back());
                     }
                 }
                 else
                 {
-                    std::size_t pos = buffer.find('>');
+                    size_t pos = buffer.find('>');
                     buffer = buffer.substr(pos + 1);
-                    current->push_back(std::move(newn));
+                    current->push_back(move(newn));
                 }
                 break;
             }
@@ -253,28 +253,28 @@ namespace html
         return root.empty() ? html_node() : root.front();
     }
 
-    html_decl parse_decl(std::string_view& buffer)
+    html_decl parse_decl(string_view& buffer)
     {
         skip_space(buffer);
         if (!starts_with(buffer, "<!doctype")) return {};
         buffer = buffer.substr(9);
         skip_space(buffer);
         html_decl decl;
-        std::size_t pos = buffer.find('>');
-        if (pos == std::string_view::npos)
+        size_t pos = buffer.find('>');
+        if (pos == string_view::npos)
         {
-            decl.type(std::string(buffer));
+            decl.type(string(buffer));
             buffer = {};
         }
         else
         {
-            decl.type(std::string(buffer.data(), pos));
+            decl.type(string(buffer.data(), pos));
             buffer = buffer.substr(pos + 1);
         }
         return decl;
     }
 
-    html_doc parse_doc(std::string_view& buffer)
+    html_doc parse_doc(string_view& buffer)
     {
         html_doc doc;
         doc.decl(parse_decl(buffer));
