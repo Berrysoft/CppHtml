@@ -1,27 +1,18 @@
-#ifndef HTML_PARSE_IMPL_HPP
-#define HTML_PARSE_IMPL_HPP
-
-#include "char_case_iterator.hpp"
-#include <html/html_doc.hpp>
-#include <string_view>
+#include <algorithm>
+#include <cctype>
+#include <html_parse_impl.hpp>
 #include <vector>
+
+using namespace std;
 
 namespace html
 {
-    inline bool char_case_eq(char a, char b) { return std::tolower(a) == std::tolower(b); }
+    inline bool char_case_eq(char a, char b) noexcept { return std::tolower(a) == std::tolower(b); }
 
-    template <typename View>
-    inline bool starts_with(View& buffer, std::string_view str)
+    inline bool starts_with(std::string_view buffer, std::string_view str)
     {
-        if (str.size() > buffer.size() && !buffer.enlarge(str.size() - buffer.size())) return false;
+        if (buffer.size() < str.size()) return false;
         return std::equal(buffer.begin(), buffer.begin() + str.size(), str.begin(), str.end(), char_case_eq);
-    }
-
-    template <typename View>
-    inline bool starts_with(View& buffer, std::size_t off, std::string_view str)
-    {
-        if ((str.size() + off > buffer.size()) && !buffer.enlarge(str.size() + off - buffer.size())) return false;
-        return std::equal(buffer.begin() + off, buffer.begin() + str.size() + off, str.begin(), str.end(), char_case_eq);
     }
 
     inline bool str_case_eq(std::string_view s1, std::string_view s2)
@@ -29,15 +20,13 @@ namespace html
         return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end(), char_case_eq);
     }
 
-    template <typename It>
-    inline std::string str_case_ctor(It it1, It it2)
+    inline std::string tolower_inplace(std::string&& str) noexcept
     {
-        return std::string(char_case_iterator(it1), char_case_iterator(it2));
+        std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+        return std::move(str);
     }
-    inline std::string str_case_ctor(const char* data, std::size_t count) { return std::string(char_case_iterator(data), char_case_iterator(data + count)); }
 
-    template <typename View>
-    inline void skip_space(View& buffer)
+    inline void skip_space(std::string_view& buffer)
     {
         bool ctn;
         do
@@ -45,81 +34,78 @@ namespace html
             ctn = false;
             while (!buffer.empty() && buffer.front() >= 1 && isspace(buffer.front()))
             {
-                ++buffer;
+                buffer = buffer.substr(1);
                 ctn = true;
             }
             if (starts_with(buffer, "<!--"))
             {
-                buffer += 4;
+                buffer = buffer.substr(4);
                 while (!starts_with(buffer, "-->"))
                 {
-                    ++buffer;
+                    buffer = buffer.substr(1);
                     ctn = true;
                 }
-                buffer += 3;
+                buffer = buffer.substr(3);
             }
         } while (ctn);
-        if (buffer.empty()) buffer.enlarge(1);
     }
 
-    template <typename View>
-    inline html_tag parse_tag(View& buffer)
+    html_tag parse_tag(std::string_view& buffer)
     {
         skip_space(buffer);
-        if (buffer.front() != '<') return {};
-        ++buffer;
-        std::size_t pos = buffer.find({ ' ', '/', '>' });
-        if (pos == View::npos)
+        if (buffer.empty() || buffer.front() != '<') return {};
+        buffer = buffer.substr(1);
+        std::size_t pos = buffer.find_first_of(" />");
+        if (pos == std::string_view::npos)
         {
-            html_tag tag(str_case_ctor(buffer.begin(), buffer.end()));
-            buffer += View::npos;
+            html_tag tag(tolower_inplace(std::string(buffer)));
+            buffer = {};
             return tag;
         }
-        html_tag tag(str_case_ctor(buffer.data(), pos));
-        buffer += pos;
+        html_tag tag(tolower_inplace(std::string(buffer.data(), pos)));
+        buffer = buffer.substr(pos);
         skip_space(buffer);
         while (!buffer.empty() && buffer.front() != '/' && buffer.front() != '>')
         {
             pos = buffer.find('=');
-            if (pos == View::npos)
+            if (pos == std::string_view::npos)
             {
-                pos = buffer.find({ ' ', '/', '>' });
-                std::string key = str_case_ctor(buffer.data(), pos);
+                pos = buffer.find_first_of(" />");
+                std::string key = tolower_inplace(std::string(buffer.data(), pos));
                 tag[key] = key;
-                buffer += pos;
+                buffer = buffer.substr(pos);
                 skip_space(buffer);
                 continue;
             }
-            std::string key = str_case_ctor(buffer.data(), pos);
-            buffer += pos + 1;
+            std::string key = tolower_inplace(std::string(buffer.data(), pos));
+            buffer = buffer.substr(pos + 1);
             skip_space(buffer);
             char qc = buffer.front();
             if (qc != '\'' && qc != '\"')
             {
-                pos = buffer.find({ ' ', '/', '>' });
+                pos = buffer.find_first_of(" />");
             }
             else
             {
-                ++buffer;
+                buffer = buffer.substr(1);
                 pos = buffer.find(qc);
             }
-            if (pos == View::npos)
+            if (pos == std::string_view::npos)
             {
                 tag[key] = std::string(buffer.begin(), buffer.end());
-                buffer += View::npos;
+                buffer = {};
             }
             else
             {
                 tag[key] = std::string(buffer.data(), pos);
-                buffer += pos + 1;
+                buffer = buffer.substr(pos + 1);
             }
             skip_space(buffer);
         }
         return tag;
     }
 
-    template <typename View>
-    inline html_node_type parse_node_type(View& buffer)
+    inline html_node_type parse_node_type(std::string_view& buffer)
     {
         skip_space(buffer);
         if (buffer.empty())
@@ -135,28 +121,26 @@ namespace html
             return html_node_type::text;
     }
 
-    template <typename View>
-    inline html_node parse_text_node(View& buffer)
+    inline html_node parse_text_node(std::string_view& buffer)
     {
         skip_space(buffer);
         html_node node;
         node.type(html_node_type::text);
         std::size_t pos = buffer.find('<');
-        if (pos == View::npos)
+        if (pos == std::string_view::npos)
         {
-            node.text(std::string(buffer.begin(), buffer.end()));
-            buffer += pos;
+            node.text(std::string(buffer));
+            buffer = {};
         }
         else
         {
             node.text(std::string(buffer.data(), pos));
-            buffer += pos;
+            buffer = buffer.substr(pos);
         }
         return node;
     }
 
-    template <typename View>
-    inline html_node parse_node(View& buffer)
+    html_node parse_node(std::string_view& buffer)
     {
         html_node root;
         root.type(html_node_type::node);
@@ -174,20 +158,20 @@ namespace html
             {
                 std::size_t pos = buffer.find('/');
                 pos++;
-                std::size_t pos2 = buffer.find({ ' ', '>' }, pos);
+                std::size_t pos2 = buffer.find_first_of(" >", pos);
                 std::string_view cname(buffer.data() + pos, pos2 - pos);
                 pos = buffer.find('>', pos);
                 pos++;
                 auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return str_case_eq(pn->tag().name(), cname); });
                 if (it == p.rend())
                 {
-                    buffer += pos;
+                    buffer = buffer.substr(pos);
                 }
                 else
                 {
                     if (it == p.rbegin())
                     {
-                        buffer += pos;
+                        buffer = buffer.substr(pos);
                     }
                     else
                     {
@@ -218,30 +202,31 @@ namespace html
             case html_node_type::node:
             {
                 html_node newn(parse_tag(buffer), {});
+                if (buffer.empty()) break;
                 if (buffer.front() == '>')
                 {
-                    ++buffer;
+                    buffer = buffer.substr(1);
                     if (str_case_eq(newn.tag().name(), "script") || str_case_eq(newn.tag().name(), "style"))
                     {
                         std::size_t pos = 0;
                         while (true)
                         {
                             pos = buffer.find('<', pos);
-                            if (pos == View::npos) break;
-                            if (starts_with(buffer, pos, "</"))
+                            if (pos == std::string_view::npos) break;
+                            if (starts_with(buffer.substr(pos), "</"))
                             {
                                 auto pos2 = pos + 2;
-                                auto pos3 = buffer.find({ ' ', '>' }, pos2);
+                                auto pos3 = buffer.find_first_of(" >", pos2);
                                 if (str_case_eq(newn.tag().name(), std::string_view(buffer.data() + pos2, pos3 - pos2)))
                                     break;
                             }
                             pos++;
                         }
                         if (pos > 0)
-                            newn.push_back({ str_case_ctor(buffer.data(), pos) });
-                        buffer += pos;
+                            newn.push_back(tolower_inplace(std::string(buffer.data(), pos)));
+                        buffer = buffer.substr(pos);
                         pos = buffer.find('>');
-                        buffer += pos + 1;
+                        buffer = buffer.substr(pos + 1);
                         current->push_back(std::move(newn));
                     }
                     else
@@ -253,7 +238,7 @@ namespace html
                 else
                 {
                     std::size_t pos = buffer.find('>');
-                    buffer += pos + 1;
+                    buffer = buffer.substr(pos + 1);
                     current->push_back(std::move(newn));
                 }
                 break;
@@ -268,30 +253,28 @@ namespace html
         return root.empty() ? html_node() : root.front();
     }
 
-    template <typename View>
-    inline html_decl parse_decl(View& buffer)
+    html_decl parse_decl(std::string_view& buffer)
     {
         skip_space(buffer);
         if (!starts_with(buffer, "<!doctype")) return {};
-        buffer += 9;
+        buffer = buffer.substr(9);
         skip_space(buffer);
         html_decl decl;
         std::size_t pos = buffer.find('>');
-        if (pos == View::npos)
+        if (pos == std::string_view::npos)
         {
-            decl.type(std::string(buffer.begin(), buffer.end()));
-            buffer += View::npos;
+            decl.type(std::string(buffer));
+            buffer = {};
         }
         else
         {
             decl.type(std::string(buffer.data(), pos));
-            buffer += pos + 1;
+            buffer = buffer.substr(pos + 1);
         }
         return decl;
     }
 
-    template <typename View>
-    inline html_doc parse_doc(View& buffer)
+    html_doc parse_doc(std::string_view& buffer)
     {
         html_doc doc;
         doc.decl(parse_decl(buffer));
@@ -299,5 +282,3 @@ namespace html
         return doc;
     }
 } // namespace html
-
-#endif // !HTML_PARSE_IMPL_HPP
