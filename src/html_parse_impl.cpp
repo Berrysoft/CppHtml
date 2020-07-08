@@ -34,18 +34,18 @@ namespace html
             ctn = false;
             while (!buffer.empty() && buffer.front() >= 1 && isspace(buffer.front()))
             {
-                buffer = buffer.substr(1);
+                buffer.remove_prefix(1);
                 ctn = true;
             }
             if (starts_with(buffer, "<!--"))
             {
-                buffer = buffer.substr(4);
+                buffer.remove_prefix(4);
                 while (!starts_with(buffer, "-->"))
                 {
-                    buffer = buffer.substr(1);
+                    buffer.remove_prefix(1);
                     ctn = true;
                 }
-                buffer = buffer.substr(3);
+                buffer.remove_prefix(3);
             }
         } while (ctn);
     }
@@ -54,7 +54,7 @@ namespace html
     {
         skip_space(buffer);
         if (buffer.empty() || buffer.front() != '<') return {};
-        buffer = buffer.substr(1);
+        buffer.remove_prefix(1);
         size_t pos = buffer.find_first_of(" />");
         if (pos == string_view::npos)
         {
@@ -63,7 +63,7 @@ namespace html
             return tag;
         }
         html_tag tag(tolower_inplace(string(buffer.data(), pos)));
-        buffer = buffer.substr(pos);
+        buffer.remove_prefix(pos);
         skip_space(buffer);
         while (!buffer.empty() && buffer.front() != '/' && buffer.front() != '>')
         {
@@ -73,12 +73,12 @@ namespace html
                 pos = buffer.find_first_of(" />");
                 string key = tolower_inplace(string(buffer.data(), pos));
                 tag[key] = key;
-                buffer = buffer.substr(pos);
+                buffer.remove_prefix(pos);
                 skip_space(buffer);
                 continue;
             }
             string key = tolower_inplace(string(buffer.data(), pos));
-            buffer = buffer.substr(pos + 1);
+            buffer.remove_prefix(pos + 1);
             skip_space(buffer);
             char qc = buffer.front();
             if (qc != '\'' && qc != '\"')
@@ -87,7 +87,7 @@ namespace html
             }
             else
             {
-                buffer = buffer.substr(1);
+                buffer.remove_prefix(1);
                 pos = buffer.find(qc);
             }
             if (pos == string_view::npos)
@@ -98,7 +98,7 @@ namespace html
             else
             {
                 tag[key] = string(buffer.data(), pos);
-                buffer = buffer.substr(pos + 1);
+                buffer.remove_prefix(pos + 1);
             }
             skip_space(buffer);
         }
@@ -135,7 +135,7 @@ namespace html
         else
         {
             node.text(string(buffer.data(), pos));
-            buffer = buffer.substr(pos);
+            buffer.remove_prefix(pos);
         }
         return node;
     }
@@ -165,13 +165,13 @@ namespace html
                 auto it = find_if(p.rbegin(), p.rend(), [cname](html_node* pn) { return str_case_eq(pn->tag().name(), cname); });
                 if (it == p.rend())
                 {
-                    buffer = buffer.substr(pos);
+                    buffer.remove_prefix(pos);
                 }
                 else
                 {
                     if (it == p.rbegin())
                     {
-                        buffer = buffer.substr(pos);
+                        buffer.remove_prefix(pos);
                     }
                     else
                     {
@@ -205,7 +205,7 @@ namespace html
                 if (buffer.empty()) break;
                 if (buffer.front() == '>')
                 {
-                    buffer = buffer.substr(1);
+                    buffer.remove_prefix(1);
                     if (str_case_eq(newn.tag().name(), "script") || str_case_eq(newn.tag().name(), "style"))
                     {
                         size_t pos = 0;
@@ -224,9 +224,9 @@ namespace html
                         }
                         if (pos > 0)
                             newn.push_back(tolower_inplace(string(buffer.data(), pos)));
-                        buffer = buffer.substr(pos);
+                        buffer.remove_prefix(pos);
                         pos = buffer.find('>');
-                        buffer = buffer.substr(pos + 1);
+                        buffer.remove_prefix(pos + 1);
                         current->push_back(move(newn));
                     }
                     else
@@ -238,7 +238,7 @@ namespace html
                 else
                 {
                     size_t pos = buffer.find('>');
-                    buffer = buffer.substr(pos + 1);
+                    buffer.remove_prefix(pos + 1);
                     current->push_back(move(newn));
                 }
                 break;
@@ -257,7 +257,7 @@ namespace html
     {
         skip_space(buffer);
         if (!starts_with(buffer, "<!doctype")) return {};
-        buffer = buffer.substr(9);
+        buffer.remove_prefix(9);
         skip_space(buffer);
         html_decl decl;
         size_t pos = buffer.find('>');
@@ -269,7 +269,7 @@ namespace html
         else
         {
             decl.type(string(buffer.data(), pos));
-            buffer = buffer.substr(pos + 1);
+            buffer.remove_prefix(pos + 1);
         }
         return decl;
     }
